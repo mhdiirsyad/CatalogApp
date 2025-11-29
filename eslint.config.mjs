@@ -14,6 +14,7 @@ export default withNuxt(
       semi: true,
       quotes: "double",
     },
+    ignores: ["**/migrations/*"],
   }, {
     rules: {
       "ts/no-redeclare": "off",
@@ -21,7 +22,7 @@ export default withNuxt(
       "no-console": ["warn"],
       "antfu/no-top-level-await": ["off"],
       "node/prefer-global/process": ["off"],
-      "node/no-process-env": ["error"],
+      "node/no-process-env": ["off"],
       "perfectionist/sort-imports": ["error", {
         tsconfigRootDir: ".",
       }],
