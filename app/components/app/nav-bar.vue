@@ -6,6 +6,7 @@
       </NuxtLink>
     </div>
     <div class="navbar-end">
+      <AppThemeToggle />
       <button class="btn btn-neutral" @click="navigateTo('/seller/auth/register')">
         Daftar Seller
       </button>
