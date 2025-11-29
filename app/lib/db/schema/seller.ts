@@ -1,0 +1,25 @@
+import { int, sqliteTable, text } from "drizzle-orm/sqlite-core";
+
+export const sellers = sqliteTable("sellers", {
+  id: int().primaryKey({ autoIncrement: true }),
+  storeName: text().notNull(),
+  description: text().notNull(),
+  picName: text().notNull(),
+  picHp: text().notNull().unique(),
+  picEmail: text().notNull().unique(),
+  password: text().notNull(),
+  address: text().notNull(),
+  picRT: int().notNull(),
+  picRW: int().notNull(),
+  picProvince: text().notNull(),
+  picCity: text().notNull(),
+  picDistrict: text().notNull(),
+  picVillage: text().notNull(),
+  picNoKTP: text().notNull(),
+  picUrlKTP: text().notNull(),
+  picUrlPhoto: text().notNull(),
+  status: text({ enum: ["PENDING", "APPROVED", "CANCELLED"] }).notNull().$default(() => "PENDING"),
+  createdAt: int().notNull().$default(() => Date.now()),
+  updatedAt: int().notNull().$default(() => Date.now()).$onUpdate(() => Date.now()),
+  verifiedAt: int(),
+});

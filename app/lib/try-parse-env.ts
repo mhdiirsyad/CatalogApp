@@ -4,7 +4,7 @@ import { ZodError } from "zod";
 
 export default function tryParseEnv<T extends ZodRawShape>(
   EnvSchema: ZodObject<T>,
-  buildEnv: Record<string, string | undefined> = import.meta.env,
+  buildEnv: Record<string, string | undefined> = process.env,
 ) {
   try {
     EnvSchema.parse(buildEnv);
