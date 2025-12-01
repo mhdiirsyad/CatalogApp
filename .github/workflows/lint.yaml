@@ -14,6 +14,8 @@ jobs:
       NODE_ENV: development
       TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
       TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+      NUXT_SESSION_PASSWORD: ${{ secrets.NUXT_SESSION_PASSWORD }}
+      NUXT_JWT_SECRET: ${{ secrets.NUXT_JWT_SECRET }}
 
     steps:
       - uses: actions/checkout@v5
