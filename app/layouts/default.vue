@@ -1,5 +1,5 @@
 <script>
-import useAuthStore from "~~/store/auth";
+import useAuthStore from "~/stores/auth";
 
 const authStore = useAuthStore();
 
@@ -12,7 +12,7 @@ onMounted(async () => {
 <template>
   <div class="flex min-h-screen flex-col">
     <AppNavBar />
-    <main>
+    <main class="flex-1 flex flex-col">
       <slot />
     </main>
   </div>

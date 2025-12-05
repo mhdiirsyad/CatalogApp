@@ -1,35 +1,37 @@
-<script lang="ts" setup>
-const props = defineProps<{
+<script setup lang="ts">
+import type { SelectCategory } from "~/lib/db/schema/category";
+
+defineProps<{
   label: string;
   name: string;
+  categories: SelectCategory[];
   placeholder?: string;
-  error?: string;
-  disabled?: boolean;
-  options: string[];
 }>();
 </script>
 
 <template>
-  <fieldset class="fieldset">
-    <legend class="fieldset-legend">
-      {{ props.label }}
-    </legend>
-    <Field
-      as="select"
-      :name="props.name"
-      class="select w-full"
-      :class="{ 'select-error': props.error }"
-      :disabled="props.disabled"
-      :aria-invalid="!!props.error"
-      :aria-describedby="props.error ? `${props.name}-error` : undefined"
-    >
-      <option disabled value="">
-        {{ props.placeholder ?? 'Select an option' }}
-      </option>
-      <option v-for="option in props.options" :key="option" :value="option">
-        {{ option }}
-      </option>
-    </Field>
-    <span v-if="props.error" :id="`${props.name}-error`" class="label text-error">{{ props.error }}</span>
-  </fieldset>
+  <Field v-slot="{ field, errorMessage }" :name="name" class="w-full">
+    <fieldset class="fieldset">
+      <legend class="fieldset-legend">
+        {{ label }}
+      </legend>
+      <select
+        v-bind="field"
+        class="select w-full"
+        :class="{ 'select-error': errorMessage }"
+      >
+        <option value="" disabled>
+          {{ placeholder || 'Pilih kategori' }}
+        </option>
+        <option
+          v-for="category in categories"
+          :key="category.id"
+          :value="category.id"
+        >
+          {{ category.name }}
+        </option>
+      </select>
+      <span v-if="errorMessage" class="label text-error">{{ errorMessage }}</span>
+    </fieldset>
+  </Field>
 </template>

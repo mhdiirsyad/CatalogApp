@@ -1,3 +1,5 @@
+import { defineStore } from "pinia";
+
 type User = any;
 
 export const useAuthStore = defineStore("auth", () => {
@@ -12,10 +14,11 @@ export const useAuthStore = defineStore("auth", () => {
   }
 
   async function fetchMe() {
+    const { $csrfFetch } = useNuxtApp();
     loading.value = true;
     error.value = null;
     try {
-      const res = await $fetch<{ user: any }>("/api/auth/me", { credentials: "include" });
+      const res = await $csrfFetch<{ user: any }>("/api/auth/me", { credentials: "include" });
       user.value = res.user ?? null;
       return user.value;
     }
@@ -30,10 +33,11 @@ export const useAuthStore = defineStore("auth", () => {
   }
 
   async function login(payload: Record<string, any>) {
+    const { $csrfFetch } = useNuxtApp();
     loading.value = true;
     error.value = null;
     try {
-      const res = await $fetch("/api/seller/login", { method: "post", body: payload, credentials: "include" });
+      const res = await $csrfFetch("/api/seller/login", { method: "post", body: payload, credentials: "include" });
       user.value = res?.user ?? null;
       return res;
     }
@@ -47,10 +51,11 @@ export const useAuthStore = defineStore("auth", () => {
   }
 
   async function logout() {
+    const { $csrfFetch } = useNuxtApp();
     loading.value = true;
     error.value = null;
     try {
-      await $fetch("/api/auth/logout", { method: "post", credentials: "include" });
+      await $csrfFetch("/api/auth/logout", { method: "post", credentials: "include" });
       user.value = null;
     }
     catch (e: any) {
