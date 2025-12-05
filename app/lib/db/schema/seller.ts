@@ -65,3 +65,4 @@ export const InsertSeller = createInsertSchema(sellers, {
 
 export const selectSeller = createSelectSchema(sellers);
 export type InputSeller = ReturnType<typeof InsertSeller.parse>;
+export type SelectSeller = typeof sellers.$inferSelect;

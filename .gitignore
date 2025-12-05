@@ -25,3 +25,5 @@ logs
 
 #db files
 local.db*
+
+docker-data/*

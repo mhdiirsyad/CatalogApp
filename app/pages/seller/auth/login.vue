@@ -4,7 +4,7 @@ import type { FetchError } from "ofetch";
 import { toTypedSchema } from "@vee-validate/zod";
 import { z } from "zod";
 
-import useAuthStore from "../../../../store/auth";
+import useAuthStore from "../../../stores/auth";
 
 definePageMeta({ middleware: "guest" });
 
@@ -48,7 +48,7 @@ const onSubmit = handleSubmit(async (values) => {
 </script>
 
 <template>
-  <div class="container max-w-md mx-auto">
+  <div class="container max-w-md m-auto bg-base-200 shadow-lg p-6 rounded-lg">
     <div>
       <h1 class="text-xl font-bold text-center my-4">
         Masuk Seller
@@ -87,10 +87,19 @@ const onSubmit = handleSubmit(async (values) => {
         :error="errors.password"
         :disabled="loading"
       />
+
+      <div class="text-center my-4">
+        <p class="text-sm">
+          Belum memiliki akun? <NuxtLink to="/seller/auth/register" class="text-primary font-semibold">
+            Daftar
+          </NuxtLink>
+        </p>
+      </div>
+
       <div class="flex justify-center">
         <button type="submit" class="btn btn-primary w-full" :disabled="loading">
           <span v-if="!loading">Masuk</span>
-          <span v-else>Memproses...</span>
+          <span v-else class="loading loading-dots loading-lg" />
         </button>
       </div>
     </form>
