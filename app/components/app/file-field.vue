@@ -4,6 +4,7 @@ const props = defineProps<{
   label?: string;
   maxFiles?: number;
   existingImages?: string[];
+  publicUpload?: boolean;
 }>();
 
 const config = useRuntimeConfig();
@@ -93,7 +94,8 @@ async function resizeAndUpload(file: File): Promise<string> {
         const formData = new FormData();
         formData.append("file", blob, "image.jpeg");
 
-        const { key } = await $csrfFetch<{ key: string }>("/api/images/image", {
+        const endpoint = props.publicUpload ? "/api/images/public" : "/api/images/image";
+        const { key } = await $csrfFetch<{ key: string }>(endpoint, {
           method: "post",
           body: formData,
         });
@@ -124,10 +126,18 @@ function getImagesToDelete(): string[] {
   return initialImages.filter(key => !remainingExistingImages.value.includes(key));
 }
 
+// Check if component has files (either new or existing)
+function hasFiles(): boolean {
+  return selectedFiles.value.length > 0 || remainingExistingImages.value.length > 0;
+}
+
 // Expose methods to parent
 defineExpose({
   uploadImages,
   getImagesToDelete,
+  hasFiles,
+  selectedFiles,
+  remainingExistingImages,
 });
 </script>
 

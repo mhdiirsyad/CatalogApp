@@ -4,14 +4,14 @@ import type { ZodSchema } from "zod";
 
 import { toTypedSchema } from "@vee-validate/zod";
 
-import type { InputSeller } from "~/lib/db/schema";
+import type { InputSellerForm } from "~/lib/db/schema";
 
-import { InsertSeller } from "~/lib/db/schema";
+import { InsertSellerForm } from "~/lib/db/schema";
 
 definePageMeta({ middleware: "guest" });
 
 const { handleSubmit, errors, setErrors, setFieldValue, validate, values } = useForm({
-  validationSchema: toTypedSchema(InsertSeller as unknown as ZodSchema<InputSeller>),
+  validationSchema: toTypedSchema(InsertSellerForm as unknown as ZodSchema<InputSellerForm>),
 });
 
 const submitError = ref("");
@@ -160,17 +160,47 @@ function onVillageChange(_selected: any | null) {
 }
 
 // File upload refs
-const ktpFileRef = ref<{ uploadImages: () => Promise<string[]> } | null>(null);
-const photoFileRef = ref<{ uploadImages: () => Promise<string[]> } | null>(null);
+const ktpFileRef = ref<{
+  uploadImages: () => Promise<string[]>;
+  hasFiles: () => boolean;
+} | null>(null);
+const photoFileRef = ref<{
+  uploadImages: () => Promise<string[]>;
+  hasFiles: () => boolean;
+} | null>(null);
 
 const { $csrfFetch } = useNuxtApp();
 const onSubmit = handleSubmit(async (values) => {
+  console.warn("onSubmit called - form is valid!", values);
   try {
     submitError.value = "";
     loading.value = true;
 
+    // Validate file uploads first
+    console.warn("Checking file uploads...");
+    console.warn("ktpFileRef.value:", ktpFileRef.value);
+    console.warn("photoFileRef.value:", photoFileRef.value);
+
+    const hasKtpFile = ktpFileRef.value?.hasFiles();
+    const hasPhotoFile = photoFileRef.value?.hasFiles();
+
+    console.warn("hasKtpFile:", hasKtpFile, "hasPhotoFile:", hasPhotoFile);
+
+    if (!hasKtpFile) {
+      submitError.value = "Foto KTP harus diupload";
+      loading.value = false;
+      return;
+    }
+    if (!hasPhotoFile) {
+      submitError.value = "Foto Profil harus diupload";
+      loading.value = false;
+      return;
+    }
+
     // Upload KTP image
+    console.warn("Uploading KTP image...");
     const ktpKeys = ktpFileRef.value ? await ktpFileRef.value.uploadImages() : [];
+    console.warn("KTP upload result:", ktpKeys);
     if (ktpKeys.length === 0) {
       submitError.value = "Foto KTP harus diupload";
       loading.value = false;
@@ -178,13 +208,16 @@ const onSubmit = handleSubmit(async (values) => {
     }
 
     // Upload Photo image
+    console.warn("Uploading Photo image...");
     const photoKeys = photoFileRef.value ? await photoFileRef.value.uploadImages() : [];
+    console.warn("Photo upload result:", photoKeys);
     if (photoKeys.length === 0) {
       submitError.value = "Foto Profil harus diupload";
       loading.value = false;
       return;
     }
 
+    console.warn("Sending registration request...");
     await $csrfFetch("/api/seller", {
       method: "post",
       body: {
@@ -193,6 +226,7 @@ const onSubmit = handleSubmit(async (values) => {
         picUrlPhoto: photoKeys[0],
       },
     });
+    console.warn("Registration successful!");
     // Registration successful
     navigateTo("/seller/auth/waiting-activation");
   }
@@ -206,6 +240,10 @@ const onSubmit = handleSubmit(async (values) => {
   finally {
     loading.value = false;
   }
+}, (invalidResult) => {
+  console.warn("Form validation failed!", invalidResult);
+  console.warn("Validation errors:", errors.value);
+  submitError.value = "Mohon periksa kembali data yang diisi";
 });
 
 onMounted(async () => {
@@ -250,7 +288,7 @@ onMounted(async () => {
         <span>{{ submitError }}</span>
       </div>
 
-      <form @submit.prevent="onSubmit">
+      <form @submit="(e) => { console.warn('Form submit event triggered', e); onSubmit(e); }">
         <!-- Step 1: Identitas & Toko -->
         <div v-show="currentStep === 1" class="space-y-4">
           <h2 class="text-lg font-semibold mb-4">
@@ -392,12 +430,14 @@ onMounted(async () => {
             label="Foto KTP"
             :multiple="false"
             :max-files="1"
+            :public-upload="true"
           />
           <AppFileField
             ref="photoFileRef"
             label="Foto Profil"
             :multiple="false"
             :max-files="1"
+            :public-upload="true"
           />
         </div>
 

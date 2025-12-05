@@ -63,6 +63,13 @@ export const InsertSeller = createInsertSchema(sellers, {
   verifiedAt: true,
 });
 
+// Schema for registration form (without file URLs since they're uploaded separately)
+export const InsertSellerForm = InsertSeller.extend({
+  picUrlKTP: InsertSeller.shape.picUrlKTP.optional(),
+  picUrlPhoto: InsertSeller.shape.picUrlPhoto.optional(),
+});
+
 export const selectSeller = createSelectSchema(sellers);
 export type InputSeller = ReturnType<typeof InsertSeller.parse>;
+export type InputSellerForm = ReturnType<typeof InsertSellerForm.parse>;
 export type SelectSeller = typeof sellers.$inferSelect;
