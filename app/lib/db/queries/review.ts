@@ -15,6 +15,7 @@ export async function addReview(review: InsertReviewSchema, slug: string) {
       noHp: review.noHp,
       comment: review.comment,
       product_id: product?.id,
+      province: review.province,
     }).returning();
     return result;
   }

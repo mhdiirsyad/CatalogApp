@@ -74,16 +74,19 @@ const userInitials = computed(() => {
       <AppThemeToggle />
 
       <!-- Seller Logged In -->
-      <div v-if="loggedIn && currentUser?.role === 'seller' && sellerData" class="flex flex-row mr-2 items-center">
-        <div class="w-10 rounded-full">
-          <img
-            v-if="sellerData.picUrlPhoto"
-            class="text-sm"
-            :src="`${config.public.s3PublicUrl}/${sellerData.picUrlPhoto}`"
-            :alt="sellerData.storeName"
-          >
-          <div v-else class="bg-neutral text-neutral-content w-full h-full flex items-center justify-center">
-            <span class="text-lg">{{ userInitials }}</span>
+      <div v-if="loggedIn && currentUser?.role === 'seller' && sellerData" class="flex flex-row gap-2 mr-2 items-center">
+        <div class="avatar">
+          <div class="ring-accent w-10 rounded-full ring-2">
+            <img
+              v-if="sellerData.picUrlPhoto"
+              class="text-sm"
+              :src="`${config.public.s3PublicUrl}/${sellerData.picUrlPhoto}`"
+              :alt="sellerData.storeName"
+            >
+            <img
+              v-else
+              :src="userInitials"
+            >
           </div>
         </div>
         <div class="flex flex-col">
