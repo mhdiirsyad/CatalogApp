@@ -131,16 +131,28 @@ function formatDate(timestamp: number) {
               :disabled="isProcessing"
               @click="openApproveDialog"
             >
-              <Icon name="tabler:check" size="20" />
-              Approve
+              <div v-if="!isProcessing">
+                <Icon name="tabler:check" size="20" />
+                Approve
+              </div>
+              <div v-else>
+                <Icon name="tabler:loader" size="20" class="animate-spin" />
+                Processing...
+              </div>
             </button>
             <button
               class="btn btn-error"
               :disabled="isProcessing"
               @click="openRejectDialog"
             >
-              <Icon name="tabler:x" size="20" />
-              Reject
+              <div v-if="!isProcessing">
+                <Icon name="tabler:x" size="20" />
+                Reject
+              </div>
+              <div v-else>
+                <Icon name="tabler:loader" size="20" class="animate-spin" />
+                Processing...
+              </div>
             </button>
           </div>
           <div v-else-if="seller.status === 'APPROVED'" class="text-sm text-success mt-2">

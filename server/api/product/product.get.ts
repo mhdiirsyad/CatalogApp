@@ -9,17 +9,10 @@ export default defineEventHandler(async (event) => {
   const province = query.province as string | undefined;
   const city = query.city as string | undefined;
 
-  if (searchQuery || categoryId || province || city) {
-    if (session.user) {
-      return findProducts({
-        sellerId: (session.user as any).id,
-        searchQuery,
-        categoryId,
-        province,
-        city,
-      });
-    }
+  if (session.user) {
+    const sellerId = Number((session.user as any).id);
     return findProducts({
+      sellerId,
       searchQuery,
       categoryId,
       province,
@@ -27,5 +20,10 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  return findProducts();
+  return findProducts({
+    searchQuery,
+    categoryId,
+    province,
+    city,
+  });
 });

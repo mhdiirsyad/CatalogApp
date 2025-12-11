@@ -174,9 +174,6 @@ const onSubmitReview = handleSubmit(async (values) => {
         </div>
       </div>
     </div>
-    <!-- <div v-else>
-      <NuxtPage />
-    </div> -->
     <AppFormDialog
       :is-open="isDialogOpen"
       title="Berikan Review"
