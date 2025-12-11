@@ -1,12 +1,20 @@
 <script setup lang="ts">
 definePageMeta({ middleware: "auth" });
 const { $csrfFetch } = useNuxtApp();
+const authStore = useAuthStore();
+const { clear: clearSession } = useUserSession();
+
 async function handleLogout() {
   try {
     await $csrfFetch("/api/auth/logout", {
       method: "post",
     });
-    await navigateTo("/seller/auth/login");
+    // Reset auth store
+    authStore.setUser(null);
+    // Clear user session
+    await clearSession();
+    // Navigate to home page instead of login
+    await navigateTo("/", { replace: true });
   }
   catch (e) {
     console.error("Logout failed", e);

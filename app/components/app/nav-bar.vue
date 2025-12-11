@@ -1,27 +1,63 @@
 <script setup lang="ts">
 import { getInitials } from "~/utils/format-initial";
 
-const { loggedIn, user } = useUserSession();
+const { loggedIn, user, fetch: refreshSession } = useUserSession();
 const authStore = useAuthStore();
 const config = useRuntimeConfig();
 
 const sellerData = ref<any>(null);
+const isLoadingSeller = ref(false);
 
 const currentUser = computed(() => user.value as User | null);
 
-// Fetch seller data jika user adalah seller
-onMounted(async () => {
-  if (loggedIn.value && currentUser.value?.role === "seller") {
-    sellerData.value = await authStore.fetchMe();
+// Fetch seller data
+async function fetchSellerData() {
+  if (isLoadingSeller.value)
+    return;
+
+  isLoadingSeller.value = true;
+  try {
+    const data = await authStore.fetchMe();
+    sellerData.value = data;
+    // Also update authStore.user untuk trigger watchers
+    authStore.setUser(data);
   }
-});
+  catch (error) {
+    console.error("Failed to fetch seller data:", error);
+    sellerData.value = null;
+    authStore.setUser(null);
+  }
+  finally {
+    isLoadingSeller.value = false;
+  }
+}
+
+// Watch loggedIn dari useUserSession
+watch(
+  loggedIn,
+  async (isLoggedIn) => {
+    if (isLoggedIn) {
+      // Refresh session dulu untuk dapat data terbaru
+      await refreshSession();
+      // Cek role setelah refresh
+      if (currentUser.value?.role === "seller") {
+        await fetchSellerData();
+      }
+    }
+    else {
+      sellerData.value = null;
+      authStore.setUser(null);
+    }
+  },
+  { immediate: true },
+);
 
 const userInitials = computed(() => {
   if (currentUser.value?.role === "seller" && sellerData.value?.storeName) {
     return getInitials(sellerData.value.storeName);
   }
-  if (currentUser.value?.role === "admin" && currentUser.value?.email) {
-    return currentUser.value.email.charAt(0).toUpperCase();
+  if (currentUser.value?.role === "admin") {
+    return getInitials(currentUser.value.username || currentUser.value.email);
   }
   return "?";
 });
@@ -38,7 +74,7 @@ const userInitials = computed(() => {
       <AppThemeToggle />
 
       <!-- Seller Logged In -->
-      <div v-if="loggedIn && currentUser?.role === 'seller' && sellerData" class="flex flex-row mr-2">
+      <div v-if="loggedIn && currentUser?.role === 'seller' && sellerData" class="flex flex-row mr-2 items-center">
         <div class="w-10 rounded-full">
           <img
             v-if="sellerData.picUrlPhoto"
@@ -54,26 +90,19 @@ const userInitials = computed(() => {
           <span class="font-bold">{{ sellerData.storeName }}</span>
           <span class="text-xs opacity-60">{{ sellerData.picName }}</span>
         </div>
-        <!-- <ul tabindex="0" class="menu menu-sm dropdown-content bg-base-100 text-base-content rounded-box z-10 mt-3 w-52 p-2 shadow">
-          <li class="menu-title" />
-        </ul> -->
       </div>
 
       <!-- Admin Logged In -->
-      <div v-else-if="loggedIn && currentUser?.role === 'admin'" class="flex flex-row mr-2">
+      <div v-else-if="loggedIn && currentUser?.role === 'admin'" class="flex flex-row mr-2 gap-2 items-center">
         <div class="avatar placeholder">
           <div class="bg-neutral text-neutral-content w-10 rounded-full">
-            <span class="text-lg">{{ userInitials }}</span>
+            <img :src="userInitials">
           </div>
         </div>
-        <div class="flex flex-col">
+        <div class="flex flex-col justify-start">
           <span class="font-bold">Admin</span>
           <span class="text-xs opacity-60">{{ currentUser.email }}</span>
         </div>
-        <!-- <ul tabindex="0" class="menu menu-sm dropdown-content bg-base-100 text-base-content rounded-box z-10 mt-3 w-52 p-2 shadow">
-          <li class="menu-title">
-          </li>
-        </ul> -->
       </div>
 
       <!-- Not Logged In -->

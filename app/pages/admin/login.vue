@@ -38,7 +38,7 @@ const onSubmit = handleSubmit(async (values) => {
 </script>
 
 <template>
-  <div class="container max-w-md mx-auto">
+  <div class="container max-w-md m-auto bg-base-200 shadow-lg p-6 rounded-lg">
     <div>
       <h1 class="text-xl font-bold text-center my-4">
         Masuk Admin
