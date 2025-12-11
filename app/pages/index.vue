@@ -56,7 +56,7 @@ onMounted(() => {
 <template>
   <div class="min-h-screen bg-base-200">
     <!-- Hero Section -->
-    <div class="bg-linear-to-br from-primary to-secondary">
+    <div class="bg-linear-to-br from-primary to-secondary max-w-[1200px] mx-auto rounded-3xl shadow-lg mt-4">
       <div class="container max-w-[1200px] mx-auto px-4 py-16">
         <div class="hero-content text-center text-primary-content">
           <div class="max-w-2xl">
@@ -239,9 +239,6 @@ onMounted(() => {
           <Icon name="tabler:package" size="28" />
           Produk Tersedia
         </h2>
-        <div v-if="products && products.length > 0" class="badge badge-lg badge-neutral">
-          {{ products.length }} Produk
-        </div>
       </div>
 
       <!-- Loading State -->

@@ -3,19 +3,34 @@
 const selectedPeriod = ref("all");
 
 // Fetch all stats data with period filter
-const { data: productsByCategory } = await useFetch<Array<{ categoryName: string; productCount: number }>>("/api/admin/stats/products-by-category", {
+const {
+  data: productsByCategory,
+  status: productsByCategoryStatus,
+} = await useFetch<Array<{ categoryName: string; productCount: number }>>("/api/admin/stats/products-by-category", {
   query: { period: selectedPeriod },
   watch: [selectedPeriod],
+  lazy: true,
 });
-const { data: sellersByProvince } = await useFetch<Array<{ province: string; sellerCount: number }>>("/api/admin/stats/sellers-by-province", {
+const {
+  data: sellersByProvince,
+  status: sellersByProvinceStatus,
+} = await useFetch<Array<{ province: string; sellerCount: number }>>("/api/admin/stats/sellers-by-province", {
   query: { period: selectedPeriod },
   watch: [selectedPeriod],
+  lazy: true,
 });
-const { data: sellersStatus } = await useFetch<{ active: number; inactive: number }>("/api/admin/stats/sellers-status", {
+const {
+  data: sellersStatus,
+  status: sellersStatusStatus,
+} = await useFetch<{ active: number; inactive: number }>("/api/admin/stats/sellers-status", {
   query: { period: selectedPeriod },
   watch: [selectedPeriod],
+  lazy: true,
 });
-const { data: reviewsStats } = await useFetch<{
+const {
+  data: reviewsStats,
+  status: reviewsStatsStatus,
+} = await useFetch<{
   totalReviews: number;
   reviewsWithComments: number;
   reviewsWithRatingOnly: number;
@@ -27,9 +42,10 @@ const { data: reviewsStats } = await useFetch<{
 }>("/api/admin/stats/reviews", {
   query: { period: selectedPeriod },
   watch: [selectedPeriod],
+  lazy: true,
 });
 
-const { data: reviewsByRating } = await useFetch<{
+const { data: reviewsByRating, status: reviewsByRatingStatus } = await useFetch<{
   rating1: number;
   rating2: number;
   rating3: number;
@@ -39,6 +55,14 @@ const { data: reviewsByRating } = await useFetch<{
   query: { period: selectedPeriod },
   watch: [selectedPeriod],
 });
+
+const loading = computed(() =>
+  productsByCategoryStatus.value === "pending"
+  || sellersByProvinceStatus.value === "pending"
+  || sellersStatusStatus.value === "pending"
+  || reviewsStatsStatus.value === "pending"
+  || reviewsByRatingStatus.value === "pending",
+);
 
 // Chart 1: Products by Category (Bar Chart)
 const categoryLabels = computed(() => productsByCategory.value?.map(item => item.categoryName) || []);
@@ -80,27 +104,27 @@ const sellerStatusItems = computed(() => [
 // Reusable stat items for reviews by rating
 const reviewRatingItems = computed(() => [
   {
-    label: "⭐ 1 Star",
+    label: "⭐ 1",
     value: reviewsByRating.value?.rating1 || 0,
     color: "bg-error/10",
   },
   {
-    label: "⭐⭐ 2 Stars",
+    label: "⭐ 2",
     value: reviewsByRating.value?.rating2 || 0,
     color: "bg-warning/10",
   },
   {
-    label: "⭐⭐⭐ 3 Stars",
+    label: "⭐ 3",
     value: reviewsByRating.value?.rating3 || 0,
     color: "bg-info/10",
   },
   {
-    label: "⭐⭐⭐⭐ 4 Stars",
+    label: "⭐ 4",
     value: reviewsByRating.value?.rating4 || 0,
     color: "bg-primary/10",
   },
   {
-    label: "⭐⭐⭐⭐⭐ 5 Stars",
+    label: "⭐ 5",
     value: reviewsByRating.value?.rating5 || 0,
     color: "bg-success/10",
   },
@@ -178,283 +202,287 @@ async function downloadReport(reportType: string) {
         </select>
       </div>
     </div>
-
-    <!-- Summary Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-      <div class="stats shadow bg-primary/10 border border-primary/20">
-        <div class="stat">
-          <div class="stat-figure text-primary">
-            <Icon name="tabler:package" size="32" />
-          </div>
-          <div class="stat-title">
-            Total Products
-          </div>
-          <div class="stat-value text-primary">
-            {{ totalProducts }}
-          </div>
-        </div>
-      </div>
-
-      <div class="stats shadow bg-info/10 border border-info/20">
-        <div class="stat">
-          <div class="stat-figure text-info">
-            <Icon name="tabler:building-store" size="32" />
-          </div>
-          <div class="stat-title">
-            Total Sellers
-          </div>
-          <div class="stat-value text-info">
-            {{ totalSellers }}
-          </div>
-        </div>
-      </div>
-
-      <div class="stats shadow bg-success/10 border border-success/20">
-        <div class="stat">
-          <div class="stat-figure text-success">
-            <Icon name="tabler:category" size="32" />
-          </div>
-          <div class="stat-title">
-            Categories
-          </div>
-          <div class="stat-value text-success">
-            {{ totalCategories }}
-          </div>
-        </div>
-      </div>
-
-      <div class="stats shadow bg-warning/10 border border-warning/20">
-        <div class="stat">
-          <div class="stat-figure text-warning">
-            <Icon name="tabler:star" size="32" />
-          </div>
-          <div class="stat-title">
-            Total Reviews
-          </div>
-          <div class="stat-value text-warning">
-            {{ reviewsStats?.totalReviews || 0 }}
-          </div>
-        </div>
-      </div>
+    <div v-if="loading" class="flex justify-center items-center h-64">
+      <span class="loading loading-dots loading-xl" />
     </div>
+    <div v-else>
+      <!-- Summary Stats Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="stats shadow bg-primary/10 border border-primary/20">
+          <div class="stat">
+            <div class="stat-figure text-primary">
+              <Icon name="tabler:package" size="32" />
+            </div>
+            <div class="stat-title">
+              Total Products
+            </div>
+            <div class="stat-value text-primary">
+              {{ totalProducts }}
+            </div>
+          </div>
+        </div>
 
-    <!-- Charts Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- Chart 1: Products by Category -->
-      <div class="card bg-base-200 shadow-xl">
-        <div class="card-body">
-          <h2 class="card-title mb-4">
-            <Icon name="tabler:chart-bar" size="24" class="text-primary" />
-            Sebaran Produk per Kategori
-          </h2>
-          <div class="h-80">
-            <ChartsBarChart
-              :labels="categoryLabels"
-              :data="categoryData"
-              label="Jumlah Produk"
-              background-color="rgba(102, 126, 234, 0.8)"
-              border-color="rgba(102, 126, 234, 1)"
-            />
+        <div class="stats shadow bg-info/10 border border-info/20">
+          <div class="stat">
+            <div class="stat-figure text-info">
+              <Icon name="tabler:building-store" size="32" />
+            </div>
+            <div class="stat-title">
+              Total Sellers
+            </div>
+            <div class="stat-value text-info">
+              {{ totalSellers }}
+            </div>
+          </div>
+        </div>
+
+        <div class="stats shadow bg-success/10 border border-success/20">
+          <div class="stat">
+            <div class="stat-figure text-success">
+              <Icon name="tabler:category" size="32" />
+            </div>
+            <div class="stat-title">
+              Categories
+            </div>
+            <div class="stat-value text-success">
+              {{ totalCategories }}
+            </div>
+          </div>
+        </div>
+
+        <div class="stats shadow bg-warning/10 border border-warning/20">
+          <div class="stat">
+            <div class="stat-figure text-warning">
+              <Icon name="tabler:star" size="32" />
+            </div>
+            <div class="stat-title">
+              Total Reviews
+            </div>
+            <div class="stat-value text-warning">
+              {{ reviewsStats?.totalReviews || 0 }}
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Chart 2: Sellers by Province -->
-      <div class="card bg-base-200 shadow-xl">
-        <div class="card-body">
-          <h2 class="card-title mb-4">
-            <Icon name="tabler:map-pin" size="24" class="text-info" />
-            Sebaran Seller per Provinsi (Top 10)
-          </h2>
-          <div class="h-80">
-            <ChartsBarChart
-              :labels="provinceLabels"
-              :data="provinceData"
-              label="Jumlah Seller"
-              background-color="rgba(59, 130, 246, 0.8)"
-              border-color="rgba(59, 130, 246, 1)"
-            />
-          </div>
-        </div>
-      </div>
-
-      <!-- Chart 3: Sellers Status -->
-      <div class="card bg-base-200 shadow-xl">
-        <div class="card-body">
-          <h2 class="card-title mb-4">
-            <Icon name="tabler:users" size="24" class="text-success" />
-            Status Seller (Aktif vs Nonaktif)
-          </h2>
-          <div class="flex items-center justify-center">
-            <div class="h-80 w-full max-w-md">
-              <ChartsDoughnutChart
-                :labels="sellersStatusLabels"
-                :data="sellersStatusData"
-                :background-color="sellersStatusColors"
+      <!-- Charts Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Chart 1: Products by Category -->
+        <div class="card bg-base-200 shadow-xl">
+          <div class="card-body">
+            <h2 class="card-title mb-4">
+              <Icon name="tabler:chart-bar" size="24" class="text-primary" />
+              Sebaran Produk per Kategori
+            </h2>
+            <div class="h-80">
+              <ChartsBarChart
+                :labels="categoryLabels"
+                :data="categoryData"
+                label="Jumlah Produk"
+                background-color="rgba(102, 126, 234, 0.8)"
+                border-color="rgba(102, 126, 234, 1)"
               />
             </div>
           </div>
-          <!-- Stats Detail using Reusable Component -->
-          <div class="mt-4">
-            <StatsStatCard
-              :items="sellerStatusItems"
-              cols="grid-cols-2"
-            />
-          </div>
         </div>
-      </div>
 
-      <!-- Chart 4: Reviews by Rating -->
-      <div class="card bg-base-200 shadow-xl">
-        <div class="card-body">
-          <h2 class="card-title mb-4">
-            <Icon name="tabler:star" size="24" class="text-warning" />
-            Review Berdasarkan Rating
-          </h2>
-          <div class="flex items-center justify-center">
-            <div class="h-80 w-full max-w-md">
-              <ChartsDoughnutChart
-                :labels="['⭐ 1', '⭐⭐ 2', '⭐⭐⭐ 3', '⭐⭐⭐⭐ 4', '⭐⭐⭐⭐⭐ 5']"
-                :data="[
-                  reviewsByRating?.rating1 || 0,
-                  reviewsByRating?.rating2 || 0,
-                  reviewsByRating?.rating3 || 0,
-                  reviewsByRating?.rating4 || 0,
-                  reviewsByRating?.rating5 || 0,
-                ]"
-                :background-color="[
-                  'rgba(239, 68, 68, 0.8)',
-                  'rgba(249, 115, 22, 0.8)',
-                  'rgba(234, 179, 8, 0.8)',
-                  'rgba(59, 130, 246, 0.8)',
-                  'rgba(34, 197, 94, 0.8)',
-                ]"
+        <!-- Chart 2: Sellers by Province -->
+        <div class="card bg-base-200 shadow-xl">
+          <div class="card-body">
+            <h2 class="card-title mb-4">
+              <Icon name="tabler:map-pin" size="24" class="text-info" />
+              Sebaran Seller per Provinsi (Top 10)
+            </h2>
+            <div class="h-80">
+              <ChartsBarChart
+                :labels="provinceLabels"
+                :data="provinceData"
+                label="Jumlah Seller"
+                background-color="rgba(59, 130, 246, 0.8)"
+                border-color="rgba(59, 130, 246, 1)"
               />
             </div>
           </div>
-          <!-- Stats Detail using Reusable Component -->
-          <div class="mt-4">
-            <StatsStatCard :items="reviewRatingItems" />
+        </div>
+
+        <!-- Chart 3: Sellers Status -->
+        <div class="card bg-base-200 shadow-xl">
+          <div class="card-body">
+            <h2 class="card-title mb-4">
+              <Icon name="tabler:users" size="24" class="text-success" />
+              Status Seller (Aktif vs Nonaktif)
+            </h2>
+            <div class="flex items-center justify-center">
+              <div class="h-80 w-full max-w-md">
+                <ChartsDoughnutChart
+                  :labels="sellersStatusLabels"
+                  :data="sellersStatusData"
+                  :background-color="sellersStatusColors"
+                />
+              </div>
+            </div>
+            <!-- Stats Detail using Reusable Component -->
+            <div class="mt-4">
+              <StatsStatCard
+                :items="sellerStatusItems"
+                cols="grid-cols-2"
+              />
+            </div>
           </div>
         </div>
-      </div>
-    </div>
 
-    <!-- Additional Reports Section -->
-    <div class="card bg-base-200 shadow-xl mt-6">
-      <div class="card-body">
-        <h2 class="card-title mb-4">
-          <Icon name="tabler:file-text" size="24" />
-          Laporan Tambahan
-        </h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <!-- Report 1: Sellers Status -->
-          <div class="card bg-base-100 shadow">
-            <div class="card-body">
-              <h3 class="font-semibold flex items-center gap-2">
-                <Icon name="tabler:users" size="20" class="text-success" />
-                Daftar Seller Aktif & Nonaktif
-              </h3>
-              <p class="text-sm text-base-content/60 mt-2">
-                Laporan lengkap semua seller dengan status aktif (approved) dan nonaktif (pending/cancelled).
-              </p>
-              <button
-                class="btn btn-success btn-sm mt-4 gap-2"
-                :disabled="isDownloading === 'sellers-status'"
-                @click="downloadReport('sellers-status')"
-              >
-                <Icon
-                  v-if="isDownloading === 'sellers-status'"
-                  name="tabler:loader-2"
-                  size="16"
-                  class="animate-spin"
+        <!-- Chart 4: Reviews by Rating -->
+        <div class="card bg-base-200 shadow-xl">
+          <div class="card-body">
+            <h2 class="card-title mb-4">
+              <Icon name="tabler:star" size="24" class="text-warning" />
+              Review Berdasarkan Rating
+            </h2>
+            <div class="flex items-center justify-center">
+              <div class="h-80 w-full max-w-md">
+                <ChartsDoughnutChart
+                  :labels="['⭐ 1', '⭐ 2', '⭐ 3', '⭐ 4', '⭐ 5']"
+                  :data="[
+                    reviewsByRating?.rating1 || 0,
+                    reviewsByRating?.rating2 || 0,
+                    reviewsByRating?.rating3 || 0,
+                    reviewsByRating?.rating4 || 0,
+                    reviewsByRating?.rating5 || 0,
+                  ]"
+                  :background-color="[
+                    'rgba(239, 68, 68, 0.8)',
+                    'rgba(249, 115, 22, 0.8)',
+                    'rgba(234, 179, 8, 0.8)',
+                    'rgba(59, 130, 246, 0.8)',
+                    'rgba(34, 197, 94, 0.8)',
+                  ]"
                 />
-                <Icon v-else name="tabler:download" size="16" />
-                Unduh PDF
-              </button>
+              </div>
             </div>
-          </div>
-
-          <!-- Report 2: Sellers by Province -->
-          <div class="card bg-base-100 shadow">
-            <div class="card-body">
-              <h3 class="font-semibold flex items-center gap-2">
-                <Icon name="tabler:map-pin" size="20" class="text-info" />
-                Daftar Seller per Provinsi
-              </h3>
-              <p class="text-sm text-base-content/60 mt-2">
-                Laporan seller yang dikelompokkan berdasarkan provinsi dengan informasi lengkap.
-              </p>
-              <button
-                class="btn btn-info btn-sm mt-4 gap-2"
-                :disabled="isDownloading === 'sellers-by-province'"
-                @click="downloadReport('sellers-by-province')"
-              >
-                <Icon
-                  v-if="isDownloading === 'sellers-by-province'"
-                  name="tabler:loader-2"
-                  size="16"
-                  class="animate-spin"
-                />
-                <Icon v-else name="tabler:download" size="16" />
-                Unduh PDF
-              </button>
-            </div>
-          </div>
-
-          <!-- Report 3: Products by Rating -->
-          <div class="card bg-base-100 shadow">
-            <div class="card-body">
-              <h3 class="font-semibold flex items-center gap-2">
-                <Icon name="tabler:star" size="20" class="text-warning" />
-                Produk Berdasarkan Rating
-              </h3>
-              <p class="text-sm text-base-content/60 mt-2">
-                Laporan produk diurutkan dari rating tertinggi dengan info toko, kategori, harga, dan provinsi.
-              </p>
-              <button
-                class="btn btn-warning btn-sm mt-4 gap-2"
-                :disabled="isDownloading === 'products-by-rating'"
-                @click="downloadReport('products-by-rating')"
-              >
-                <Icon
-                  v-if="isDownloading === 'products-by-rating'"
-                  name="tabler:loader-2"
-                  size="16"
-                  class="animate-spin"
-                />
-                <Icon v-else name="tabler:download" size="16" />
-                Unduh PDF
-              </button>
+            <!-- Stats Detail using Reusable Component -->
+            <div class="mt-4">
+              <StatsStatCard :items="reviewRatingItems" />
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Info Section -->
-    <div class="card bg-base-200 shadow-xl mt-6">
-      <div class="card-body">
-        <h2 class="card-title">
-          <Icon name="tabler:info-circle" size="24" />
-          Informasi
-        </h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-          <div>
-            <p class="mb-2">
-              <strong>📊 Products by Category:</strong> Menampilkan distribusi produk di setiap kategori.
-            </p>
-            <p class="mb-2">
-              <strong>📍 Sellers by Province:</strong> Menampilkan 10 provinsi dengan seller terbanyak.
-            </p>
+      <!-- Additional Reports Section -->
+      <div class="card bg-base-200 shadow-xl mt-6">
+        <div class="card-body">
+          <h2 class="card-title mb-4">
+            <Icon name="tabler:file-text" size="24" />
+            Laporan Tambahan
+          </h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Report 1: Sellers Status -->
+            <div class="card bg-base-100 shadow">
+              <div class="card-body">
+                <h3 class="font-semibold flex items-center gap-2">
+                  <Icon name="tabler:users" size="20" class="text-success" />
+                  Daftar Seller Aktif & Nonaktif
+                </h3>
+                <p class="text-sm text-base-content/60 mt-2">
+                  Laporan lengkap semua seller dengan status aktif (approved) dan nonaktif (pending/cancelled).
+                </p>
+                <button
+                  class="btn btn-success btn-sm mt-4 gap-2"
+                  :disabled="isDownloading === 'sellers-status'"
+                  @click="downloadReport('sellers-status')"
+                >
+                  <Icon
+                    v-if="isDownloading === 'sellers-status'"
+                    name="tabler:loader-2"
+                    size="16"
+                    class="animate-spin"
+                  />
+                  <Icon v-else name="tabler:download" size="16" />
+                  Unduh PDF
+                </button>
+              </div>
+            </div>
+
+            <!-- Report 2: Sellers by Province -->
+            <div class="card bg-base-100 shadow">
+              <div class="card-body">
+                <h3 class="font-semibold flex items-center gap-2">
+                  <Icon name="tabler:map-pin" size="20" class="text-info" />
+                  Daftar Seller per Provinsi
+                </h3>
+                <p class="text-sm text-base-content/60 mt-2">
+                  Laporan seller yang dikelompokkan berdasarkan provinsi dengan informasi lengkap.
+                </p>
+                <button
+                  class="btn btn-info btn-sm mt-4 gap-2"
+                  :disabled="isDownloading === 'sellers-by-province'"
+                  @click="downloadReport('sellers-by-province')"
+                >
+                  <Icon
+                    v-if="isDownloading === 'sellers-by-province'"
+                    name="tabler:loader-2"
+                    size="16"
+                    class="animate-spin"
+                  />
+                  <Icon v-else name="tabler:download" size="16" />
+                  Unduh PDF
+                </button>
+              </div>
+            </div>
+
+            <!-- Report 3: Products by Rating -->
+            <div class="card bg-base-100 shadow">
+              <div class="card-body">
+                <h3 class="font-semibold flex items-center gap-2">
+                  <Icon name="tabler:star" size="20" class="text-warning" />
+                  Produk Berdasarkan Rating
+                </h3>
+                <p class="text-sm text-base-content/60 mt-2">
+                  Laporan produk diurutkan dari rating tertinggi dengan info toko, kategori, harga, dan provinsi.
+                </p>
+                <button
+                  class="btn btn-warning btn-sm mt-4 gap-2"
+                  :disabled="isDownloading === 'products-by-rating'"
+                  @click="downloadReport('products-by-rating')"
+                >
+                  <Icon
+                    v-if="isDownloading === 'products-by-rating'"
+                    name="tabler:loader-2"
+                    size="16"
+                    class="animate-spin"
+                  />
+                  <Icon v-else name="tabler:download" size="16" />
+                  Unduh PDF
+                </button>
+              </div>
+            </div>
           </div>
-          <div>
-            <p class="mb-2">
-              <strong>👥 Seller Status:</strong> Perbandingan seller aktif (approved) vs nonaktif (pending/cancelled).
-            </p>
-            <p class="mb-2">
-              <strong>⭐ Reviews:</strong> Jumlah pengunjung yang memberikan komentar dan rating.
-            </p>
+        </div>
+      </div>
+
+      <!-- Info Section -->
+      <div class="card bg-base-200 shadow-xl mt-6">
+        <div class="card-body">
+          <h2 class="card-title">
+            <Icon name="tabler:info-circle" size="24" />
+            Informasi
+          </h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div>
+              <p class="mb-2">
+                <strong>📊 Products by Category:</strong> Menampilkan distribusi produk di setiap kategori.
+              </p>
+              <p class="mb-2">
+                <strong>📍 Sellers by Province:</strong> Menampilkan 10 provinsi dengan seller terbanyak.
+              </p>
+            </div>
+            <div>
+              <p class="mb-2">
+                <strong>👥 Seller Status:</strong> Perbandingan seller aktif (approved) vs nonaktif (pending/cancelled).
+              </p>
+              <p class="mb-2">
+                <strong>⭐ Reviews:</strong> Jumlah pengunjung yang memberikan komentar dan rating.
+              </p>
+            </div>
           </div>
         </div>
       </div>

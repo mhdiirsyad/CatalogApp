@@ -1,5 +1,6 @@
+import chromium from "@sparticuz/chromium";
 import { desc, eq, gte } from "drizzle-orm";
-import puppeteer from "puppeteer";
+import puppeteer from "puppeteer-core";
 
 import db from "~/lib/db";
 import { categories, products, sellers } from "~/lib/db/schema";
@@ -224,32 +225,53 @@ export default defineEventHandler(async (event) => {
     </html>
   `;
 
+  const isProduction = process.env.VERCEL;
+  let browser;
   // Generate PDF using Puppeteer
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-  });
 
-  const page = await browser.newPage();
-  await page.setContent(html);
+  try {
+    if (isProduction) {
+      chromium.setGraphicsMode = false;
+      browser = await puppeteer.launch({
+        args: [...chromium.args, "--disable-gpu"],
+        executablePath: await chromium.executablePath(),
+        headless: true,
+      });
+    }
+    else {
+      // Use local Chrome for development
+      const puppeteerFull = await import("puppeteer").then(m => m.default);
+      browser = await puppeteerFull.launch({
+        headless: true,
+        args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      });
+    }
+    const page = await browser.newPage();
+    await page.setContent(html);
+    const pdfBuffer = await page.pdf({
+      format: "A4",
+      landscape: true,
+      margin: {
+        top: "20mm",
+        right: "15mm",
+        bottom: "20mm",
+        left: "15mm",
+      },
+      printBackground: true,
+    });
+    await browser.close();
 
-  const pdfBuffer = await page.pdf({
-    format: "A4",
-    landscape: true,
-    margin: {
-      top: "20mm",
-      right: "15mm",
-      bottom: "20mm",
-      left: "15mm",
-    },
-    printBackground: true,
-  });
+    // Set response headers for PDF download
+    setHeader(event, "Content-Type", "application/pdf");
+    setHeader(event, "Content-Disposition", `attachment; filename="laporan-produk-berdasarkan-rating-${Date.now()}.pdf"`);
 
-  await browser.close();
-
-  // Set response headers for PDF download
-  setHeader(event, "Content-Type", "application/pdf");
-  setHeader(event, "Content-Disposition", `attachment; filename="laporan-produk-berdasarkan-rating-${Date.now()}.pdf"`);
-
-  return pdfBuffer;
+    return pdfBuffer;
+  }
+  catch (e) {
+    const error = e as Error;
+    return sendError(event, createError({
+      statusCode: 500,
+      statusMessage: `Gagal mengunduh laporan, ${error.message}`,
+    }));
+  }
 });

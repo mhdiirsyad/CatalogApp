@@ -3,6 +3,7 @@ const props = defineProps<{
   isOpen: boolean;
   action: "approve" | "reject";
   sellerName?: string;
+  loading?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -65,11 +66,17 @@ const actionClass = computed(() => props.action === "approve" ? "btn-success" : 
       </div>
 
       <div class="modal-action">
-        <button class="btn" @click="emit('close')">
-          Cancel
+        <button class="btn" :disabled="props.loading" @click="emit('close')">
+          Batal
         </button>
-        <button class="btn" :class="actionClass" @click="emit('confirm')">
-          {{ actionText }}
+        <button
+          class="btn"
+          :disabled="props.loading"
+          :class="actionClass"
+          @click="emit('confirm')"
+        >
+          <span v-if="!props.loading">{{ actionText }}</span>
+          <span v-else class="loading loading-spinner loading-sm" />
         </button>
       </div>
     </div>
