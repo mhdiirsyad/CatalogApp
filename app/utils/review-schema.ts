@@ -16,6 +16,7 @@ export const reviewSchema = z.object({
     .min(1, "Nomor HP harus diisi")
     .regex(/^08\d{9,11}$/, "Nomor HP harus dimulai dengan 08 dan terdiri dari 11-13 digit"),
   email: z.string().min(1, "Email harus diisi").email("Email tidak valid"),
+  province: z.string().min(1, "Provinsi harus dipilih"),
   rating: toNumber(z.number().int().min(1, "Rating harus dipilih").max(5, "Rating maksimal 5")),
   comment: z.string().min(1, "Komentar harus diisi").max(500, "Komentar terlalu panjang"),
 });

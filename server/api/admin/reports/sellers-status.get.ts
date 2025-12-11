@@ -1,5 +1,6 @@
+import chromium from "@sparticuz/chromium";
 import { desc, gte } from "drizzle-orm";
-import puppeteer from "puppeteer";
+import puppeteer from "puppeteer-core";
 
 import db from "~/lib/db";
 import { sellers } from "~/lib/db/schema";
@@ -242,30 +243,59 @@ export default defineEventHandler(async (event) => {
   `;
 
   // Generate PDF using Puppeteer
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-  });
+  // Detect if running on Vercel or production serverless environment
+  const isProduction = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_VERSION;
 
-  const page = await browser.newPage();
-  await page.setContent(html);
+  let browser;
+  try {
+    if (isProduction) {
+      // Use @sparticuz/chromium for Vercel/serverless
+      // Set font config for better compatibility
+      chromium.setGraphicsMode = false;
 
-  const pdfBuffer = await page.pdf({
-    format: "A4",
-    margin: {
-      top: "20mm",
-      right: "15mm",
-      bottom: "20mm",
-      left: "15mm",
-    },
-    printBackground: true,
-  });
+      browser = await puppeteer.launch({
+        args: [...chromium.args, "--disable-gpu"],
+        executablePath: await chromium.executablePath(),
+        headless: true,
+      });
+    }
+    else {
+      // Use local Chrome for development
+      const puppeteerFull = await import("puppeteer").then(m => m.default);
+      browser = await puppeteerFull.launch({
+        headless: true,
+        args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      });
+    }
 
-  await browser.close();
+    const page = await browser.newPage();
+    await page.setContent(html);
 
-  // Set response headers for PDF download
-  setHeader(event, "Content-Type", "application/pdf");
-  setHeader(event, "Content-Disposition", `attachment; filename="laporan-seller-status-${Date.now()}.pdf"`);
+    const pdfBuffer = await page.pdf({
+      format: "A4",
+      margin: {
+        top: "20mm",
+        right: "15mm",
+        bottom: "20mm",
+        left: "15mm",
+      },
+      printBackground: true,
+    });
 
-  return pdfBuffer;
+    await browser.close();
+
+    // Set response headers for PDF download
+    setHeader(event, "Content-Type", "application/pdf");
+    setHeader(event, "Content-Disposition", `attachment; filename="laporan-seller-status-${Date.now()}.pdf"`);
+
+    return pdfBuffer;
+  }
+  catch (error) {
+    console.error("PDF Generation Error:", error);
+    throw createError({
+      statusCode: 500,
+      statusMessage: "Failed to generate PDF report",
+      message: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
 });

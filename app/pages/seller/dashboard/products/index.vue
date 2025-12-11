@@ -2,7 +2,7 @@
 import type { SelectCategory } from "~/lib/db/schema";
 
 const productStore = useProductStore();
-const { productStatus, products, searchQuery, categoryFilter } = storeToRefs(productStore);
+const { sellerProductStatus, sellerProducts, searchQuery, categoryFilter } = storeToRefs(productStore);
 const config = useRuntimeConfig();
 
 const { data: categories } = await useFetch<SelectCategory[]>("/api/category/category");
@@ -19,7 +19,7 @@ watch(searchInput, (newValue) => {
 });
 
 onMounted(() => {
-  productStore.productRefresh();
+  productStore.sellerProductRefresh();
 });
 </script>
 
@@ -126,13 +126,13 @@ onMounted(() => {
         <Icon name="tabler:list" size="28" />
         Daftar Produk
       </h2>
-      <div v-if="products && products.length > 0" class="badge badge-lg badge-neutral">
-        {{ products.length }} Produk
+      <div v-if="sellerProducts && sellerProducts.length > 0" class="badge badge-lg badge-neutral">
+        {{ sellerProducts.length }} Produk
       </div>
     </div>
 
     <!-- Loading State -->
-    <div v-if="productStatus === 'pending'" class="flex flex-col items-center justify-center py-20">
+    <div v-if="sellerProductStatus === 'pending'" class="flex flex-col items-center justify-center py-20">
       <span class="loading loading-spinner loading-lg text-primary" />
       <p class="mt-4 text-base-content/60">
         Memuat produk...
@@ -140,7 +140,7 @@ onMounted(() => {
     </div>
 
     <!-- Empty State -->
-    <div v-else-if="!products || products.length === 0" class="card bg-base-100 shadow-lg">
+    <div v-else-if="!sellerProducts || sellerProducts.length === 0" class="card bg-base-100 shadow-lg">
       <div class="card-body items-center text-center py-20">
         <Icon name="tabler:package-off" size="64" class="text-base-content/30 mb-4" />
         <h3 class="text-xl font-bold mb-2">
@@ -169,7 +169,7 @@ onMounted(() => {
     <!-- Products Grid -->
     <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
       <div
-        v-for="product in products"
+        v-for="product in sellerProducts"
         :key="product.id"
         class="card bg-base-100 shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer group"
         @click="navigateTo({ name: `seller-dashboard-products-slug`, params: { slug: product.slug } })"
@@ -219,7 +219,7 @@ onMounted(() => {
           <div class="card-actions justify-between items-center mt-2 pt-2 border-t">
             <div class="flex items-center gap-1 text-xs text-base-content/60">
               <Icon name="tabler:star-filled" size="14" class="text-warning" />
-              <span>{{ product.rating || '0.0' }}</span>
+              <span>{{ product.rating.toFixed(2) || '0.0' }}</span>
             </div>
             <div class="flex gap-1">
               <button

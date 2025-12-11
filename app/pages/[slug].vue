@@ -24,6 +24,9 @@ const isDialogOpen = ref(false);
 const isSubmitting = ref(false);
 const reviewError = ref("");
 
+// Fetch provinces from Emsifa API
+const { data: provinces } = await useFetch<Array<{ id: string; name: string }>>("https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json");
+
 const { handleSubmit, errors, resetForm, values } = useForm({
   validationSchema: toTypedSchema(reviewSchema),
 });
@@ -267,6 +270,29 @@ const onSubmitReview = handleSubmit(async (values) => {
           placeholder="08xxxxxxxxxx"
           :error="errors.noHp"
         />
+
+        <div class="form-control w-full mb-4">
+          <label class="label">
+            <span class="label-text font-semibold">Provinsi</span>
+          </label>
+          <Field v-slot="{ field }" name="province">
+            <select v-bind="field" class="select select-bordered w-full">
+              <option value="" disabled selected>
+                Pilih provinsi
+              </option>
+              <option
+                v-for="province in provinces"
+                :key="province.id"
+                :value="province.name"
+              >
+                {{ province.name }}
+              </option>
+            </select>
+          </Field>
+          <label v-if="errors.province" class="label">
+            <span class="label-text-alt text-error">{{ errors.province }}</span>
+          </label>
+        </div>
 
         <AppFormField
           label="Komentar"

@@ -23,17 +23,17 @@ export const useProductStore = defineStore("useProductStore", () => {
     return params.toString() ? `?${params.toString()}` : "";
   });
 
-  // const {
-  //   data: sellerProducts,
-  //   status: sellerProductStatus,
-  //   refresh: sellerProductRefresh,
-  // } = useFetch<SelectProductFull[]>(
-  //   () => `/api/seller/product${productQueryParams.value}`,
-  //   {
-  //     lazy: true,
-  //     watch: [searchQuery, categoryFilter],
-  //   },
-  // );
+  const {
+    data: sellerProducts,
+    status: sellerProductStatus,
+    refresh: sellerProductRefresh,
+  } = useFetch<SelectProductFull[]>(
+    () => `/api/seller/product${productQueryParams.value}`,
+    {
+      lazy: true,
+      watch: [searchQuery, categoryFilter],
+    },
+  );
 
   const productWithSlug = computed(() => `/api/product/${route.params.slug}`);
 
@@ -71,5 +71,8 @@ export const useProductStore = defineStore("useProductStore", () => {
     products,
     productStatus,
     productRefresh,
+    sellerProducts,
+    sellerProductStatus,
+    sellerProductRefresh,
   };
 });
