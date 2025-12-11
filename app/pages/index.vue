@@ -64,7 +64,7 @@ onMounted(() => {
               <Icon name="tabler:shopping-bag" size="64" class="mx-auto opacity-90" />
             </div>
             <h1 class="text-5xl md:text-6xl font-bold mb-6">
-              Catalog App
+              {{ config.public.siteName }}
             </h1>
             <p class="text-lg md:text-xl mb-8 opacity-90">
               Platform katalog produk terpercaya untuk seller memamerkan produk mereka kepada ribuan calon pembeli di seluruh Indonesia.
