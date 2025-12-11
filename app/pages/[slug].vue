@@ -271,28 +271,13 @@ const onSubmitReview = handleSubmit(async (values) => {
           :error="errors.noHp"
         />
 
-        <div class="form-control w-full mb-4">
-          <label class="label">
-            <span class="label-text font-semibold">Provinsi</span>
-          </label>
-          <Field v-slot="{ field }" name="province">
-            <select v-bind="field" class="select select-bordered w-full">
-              <option value="" disabled selected>
-                Pilih provinsi
-              </option>
-              <option
-                v-for="province in provinces"
-                :key="province.id"
-                :value="province.name"
-              >
-                {{ province.name }}
-              </option>
-            </select>
-          </Field>
-          <label v-if="errors.province" class="label">
-            <span class="label-text-alt text-error">{{ errors.province }}</span>
-          </label>
-        </div>
+        <AppRegionSelect
+          :options="provinces ?? []"
+          label="Provinsi"
+          name="province"
+          placeholder="Pilih provinsi"
+          :error="errors.province"
+        />
 
         <AppFormField
           label="Komentar"
