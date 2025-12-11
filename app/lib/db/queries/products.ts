@@ -60,13 +60,67 @@ export async function findProductBySlug(slug: string) {
   });
 }
 
-export async function findProducts(sellerId: number) {
-  return db.query.products.findMany({
-    where: eq(products.seller_id, sellerId),
-    with: { category: true, reviews: true, productImages: { orderBy(field, operators) {
-      return operators.asc(field.createdAt);
-    } } },
+export async function findProducts(options?: {
+  sellerId?: number;
+  searchQuery?: string;
+  categoryId?: number;
+  province?: string;
+  city?: string;
+}) {
+  const condition = [];
+
+  // Filter by seller ID (untuk seller dashboard)
+  if (options?.sellerId) {
+    condition.push(eq(products.seller_id, options.sellerId));
+  }
+
+  // Filter by category (hard filter di database)
+  if (options?.categoryId) {
+    condition.push(eq(products.category_id, options.categoryId));
+  }
+
+  // Fetch products with relations
+  const allProducts = await db.query.products.findMany({
+    where: condition.length > 0 ? and(...condition) : undefined,
+    with: {
+      category: true,
+      reviews: true,
+      productImages: {
+        orderBy(field, operators) {
+          return operators.asc(field.createdAt);
+        },
+      },
+      seller: true,
+    },
   });
+
+  // Client-side filtering
+  let filteredProducts = allProducts;
+
+  // Search query: cari di nama produk ATAU nama toko
+  if (options?.searchQuery) {
+    const query = options.searchQuery.toLowerCase();
+    filteredProducts = filteredProducts.filter(product =>
+      product.name.toLowerCase().includes(query)
+      || product.seller?.storeName.toLowerCase().includes(query),
+    );
+  }
+
+  // Filter by province (hard filter)
+  if (options?.province) {
+    filteredProducts = filteredProducts.filter(product =>
+      product.seller?.picProvince.toLowerCase().includes(options.province!.toLowerCase()),
+    );
+  }
+
+  // Filter by city (hard filter)
+  if (options?.city) {
+    filteredProducts = filteredProducts.filter(product =>
+      product.seller?.picCity.toLowerCase().includes(options.city!.toLowerCase()),
+    );
+  }
+
+  return filteredProducts;
 }
 
 export async function searchProducts(

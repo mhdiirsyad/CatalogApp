@@ -2,7 +2,7 @@
 import type { SelectCategory } from "~/lib/db/schema";
 
 const productStore = useProductStore();
-const { sellerProductStatus, sellerProducts, searchQuery, categoryFilter } = storeToRefs(productStore);
+const { productStatus, products, searchQuery, categoryFilter } = storeToRefs(productStore);
 const config = useRuntimeConfig();
 
 const { data: categories } = await useFetch<SelectCategory[]>("/api/category/category");
@@ -19,7 +19,7 @@ watch(searchInput, (newValue) => {
 });
 
 onMounted(() => {
-  productStore.sellerProductRefresh();
+  productStore.productRefresh();
 });
 </script>
 
@@ -57,12 +57,12 @@ onMounted(() => {
       </NuxtLink>
     </div>
     <div class="mt-4">
-      <div v-if="sellerProductStatus === 'pending'">
+      <div v-if="productStatus === 'pending'">
         <span class="loading loading-dots loading-xl" />
       </div>
       <div v-else class="grid grid-cols-3 gap-4">
         <div
-          v-for="product in sellerProducts"
+          v-for="product in products"
           :key="product.id"
           class="card bg-base-100 shadow-sm"
           @click="navigateTo({ name: `seller-dashboard-products-slug`, params: { slug: product.slug } })"

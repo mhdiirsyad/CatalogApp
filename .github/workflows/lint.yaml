@@ -23,6 +23,14 @@ jobs:
       S3_REGION: ${{ secrets.S3_REGION }}
       S3_PUBLIC_URL: ${{ secrets.S3_PUBLIC_URL }}
       S3_TOKEN_VALUE: ${{ secrets.S3_TOKEN_VALUE }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      EMAIL_SERVICE: ${{ secrets.EMAIL_SERVICE }}
+      EMAIL_HOST: ${{ secrets.EMAIL_HOST }}
+      EMAIL_PORT: ${{ secrets.EMAIL_PORT }}
+      EMAIL_USER: ${{ secrets.EMAIL_USER }}
+      EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+      EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+      APP_PUBLIC_URL: ${{ secrets.API_PUBLIC_URL }}
 
     steps:
       - uses: actions/checkout@v5

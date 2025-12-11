@@ -1,11 +1,41 @@
 <script setup lang="ts">
 import type { SelectCategory } from "~/lib/db/schema";
 
+const { user } = useUserSession();
 const productStore = useProductStore();
-const { products, productStatus, searchQuery, categoryFilter } = storeToRefs(productStore);
+const {
+  products,
+  productStatus,
+  searchQuery,
+  categoryFilter,
+  provinceFilter,
+  cityFilter,
+} = storeToRefs(productStore);
 const config = useRuntimeConfig();
 
 const { data: categories } = await useFetch<SelectCategory[]>("/api/category/category");
+
+// Fetch provinces from our database (approved sellers only)
+const { data: provinces } = await useFetch<string[]>("/api/guest/locations/provinces", { lazy: true });
+
+// Fetch cities based on selected province
+const { data: cities, refresh: refreshCities } = await useFetch<string[]>(
+  () => `/api/guest/locations/cities?province=${provinceFilter.value}`,
+  {
+    lazy: true,
+    immediate: false,
+    watch: false,
+  },
+);
+
+// Handle province change
+async function onProvinceChange() {
+  cityFilter.value = ""; // Reset city filter
+
+  if (provinceFilter.value) {
+    await refreshCities();
+  }
+}
 
 const searchInput = ref("");
 
@@ -35,7 +65,13 @@ onMounted(() => {
             Aplikasi katalog produk sederhana untuk para seller memamerkan produk
             mereka kepada calon pembeli.
           </p>
-          <button class="btn btn-primary" @click="navigateTo('/seller/auth/register')">
+          <button v-if="user && (user as User).role === 'seller'" class="btn btn-primary" @click="navigateTo('/seller/dashboard')">
+            Dashboard seller <Icon name="tabler:arrow-right" size="24" />
+          </button>
+          <button v-else-if="user && (user as User).role === 'admin'" class="btn btn-primary" @click="navigateTo('/admin/dashboard')">
+            Dashboard Admin <Icon name="tabler:arrow-right" size="24" />
+          </button>
+          <button v-else class="btn btn-primary" @click="navigateTo('/seller/auth/register')">
             Daftar seller <Icon name="tabler:arrow-right" size="24" />
           </button>
         </div>
@@ -61,6 +97,30 @@ onMounted(() => {
             :value="category.id"
           >
             {{ category.name }}
+          </option>
+        </select>
+        <select v-model="provinceFilter" class="select select-bordered w-48" @change="onProvinceChange">
+          <option value="">
+            Semua Provinsi
+          </option>
+          <option
+            v-for="province in provinces"
+            :key="province"
+            :value="province"
+          >
+            {{ province }}
+          </option>
+        </select>
+        <select v-model="cityFilter" class="select select-bordered w-48" :disabled="!provinceFilter">
+          <option value="">
+            Semua Kota/Kabupaten
+          </option>
+          <option
+            v-for="city in cities"
+            :key="city"
+            :value="city"
+          >
+            {{ city }}
           </option>
         </select>
       </div>

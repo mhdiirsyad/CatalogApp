@@ -67,11 +67,6 @@ async function confirmDelete() {
   }
   isDeleting.value = false;
 }
-
-// onBeforeRouteUpdate((to) => {
-//   if (to.name === "seller-dashboard-products-slug")
-//     productStore.selectedProductRefresh();
-// });
 </script>
 
 <template>
@@ -131,10 +126,6 @@ async function confirmDelete() {
                 ({{ selectedProduct.reviews.length }} review)
               </span>
             </h2>
-            <button class="btn btn-primary" @click="openDialog">
-              <Icon name="tabler:message-plus" size="20" />
-              Tulis Review
-            </button>
           </div>
 
           <div v-if="selectedProduct?.reviews.length === 0" class="flex flex-col justify-center items-center h-64 text-center">

@@ -58,13 +58,13 @@ onUnmounted(() => {
 
 <template>
   <dialog ref="dialog" class="modal" :class="{ 'pointer-events-none': loading }">
-    <div class="modal-box max-w-2xl">
+    <div class="modal-box">
       <h3 class="text-lg font-bold mb-4">
         {{ title }}
       </h3>
 
       <!-- Main content slot for form or any content -->
-      <div class="py-4">
+      <div class="py-4 w-full">
         <slot />
       </div>
 
