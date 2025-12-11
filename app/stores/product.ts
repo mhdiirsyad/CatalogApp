@@ -6,29 +6,36 @@ export const useProductStore = defineStore("useProductStore", () => {
   const route = useRoute();
   const searchQuery = ref("");
   const categoryFilter = ref<number | null>(null);
+  const provinceFilter = ref("");
+  const cityFilter = ref("");
 
   const productQueryParams = computed(() => {
     const params = new URLSearchParams();
-    if (searchQuery.value)
+    if (searchQuery.value) {
       params.set("search", searchQuery.value);
+    }
     if (categoryFilter.value)
-      params.set("category", categoryFilter.value.toString());
+      params.set("categoryId", categoryFilter.value.toString() || "");
+    if (provinceFilter.value)
+      params.set("province", provinceFilter.value);
+    if (cityFilter.value)
+      params.set("city", cityFilter.value);
     return params.toString() ? `?${params.toString()}` : "";
   });
 
-  const {
-    data: sellerProducts,
-    status: sellerProductStatus,
-    refresh: sellerProductRefresh,
-  } = useFetch(
-    () => `/api/seller/product${productQueryParams.value}`,
-    {
-      lazy: true,
-      watch: [searchQuery, categoryFilter],
-    },
-  );
+  // const {
+  //   data: sellerProducts,
+  //   status: sellerProductStatus,
+  //   refresh: sellerProductRefresh,
+  // } = useFetch<SelectProductFull[]>(
+  //   () => `/api/seller/product${productQueryParams.value}`,
+  //   {
+  //     lazy: true,
+  //     watch: [searchQuery, categoryFilter],
+  //   },
+  // );
 
-  const productWithSlug = computed(() => `/api/seller/product/${route.params.slug}`);
+  const productWithSlug = computed(() => `/api/product/${route.params.slug}`);
 
   const {
     data: selectedProduct,
@@ -40,30 +47,23 @@ export const useProductStore = defineStore("useProductStore", () => {
     immediate: false,
   });
 
-  // const {
-  //   data: products,
-  //   status: productStatus,
-  //   refresh: productRefresh,
-  // } = useFetch<SelectProductFull[]>("/api/guest/product");
-
   const {
     data: products,
     status: productStatus,
     refresh: productRefresh,
-  } = useFetch(
-    () => `/api/seller/product${productQueryParams.value}`,
+  } = useFetch<SelectProductFull[]>(
+    () => `/api/product/product${productQueryParams.value}`,
     {
       lazy: true,
-      watch: [searchQuery, categoryFilter],
+      watch: [searchQuery, categoryFilter, provinceFilter, cityFilter],
     },
   );
 
   return {
-    sellerProducts,
-    sellerProductStatus,
-    sellerProductRefresh,
     searchQuery,
     categoryFilter,
+    provinceFilter,
+    cityFilter,
     selectedProduct,
     selectedProductStatus,
     selectedProductError,

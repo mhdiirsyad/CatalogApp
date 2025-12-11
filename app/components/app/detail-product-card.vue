@@ -19,16 +19,16 @@ const totalImages = defineModel<number>("totalImages", { required: true });
 <template>
   <div class="p-4 rounded-lg card bg-base-100 shadow-sm flex flex-row w-full">
     <div class="flex flex-col gap-2">
-      <figure class="w-96 aspect-square bg-accent rounded-md relative group">
+      <figure class="w-96 h-96 rounded-md relative group">
         <img
           v-if="selectedProduct.productImages[currentImageIndex]"
-          class="aspect-square object-cover"
+          class="object-fit"
           :src="`${config.public.s3PublicUrl}/${selectedProduct.productImages[currentImageIndex]?.imageUrl}`"
           alt="Product Image"
         >
         <img
           v-else
-          class="aspect-square object-cover"
+          class="object-fit"
           src="https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp"
           alt="Placeholder"
         >

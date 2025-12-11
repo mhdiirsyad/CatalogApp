@@ -42,6 +42,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       s3PublicUrl: env.S3_PUBLIC_URL,
+      appPublicUrl: env.APP_PUBLIC_URL,
     },
   },
 });

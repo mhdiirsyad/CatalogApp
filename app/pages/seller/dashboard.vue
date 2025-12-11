@@ -21,13 +21,24 @@ function toggleSidebar() {
 </script>
 
 <template>
-  <div class="flex-1 flex">
-    <div class="bg-base-200 transition-all duration-200" :class="{ 'w-64': isSidebarOpen, 'w-16': !isSidebarOpen }">
-      <div class="flex mb-4" :class="{ 'justify-end': isSidebarOpen, 'justify-center': !isSidebarOpen }" @click="toggleSidebar">
+  <div class="flex h-screen overflow-hidden">
+    <!-- Sidebar - Fixed, tidak scroll -->
+    <div
+      class="bg-base-200 transition-all duration-200 flex flex-col h-screen"
+      :class="{ 'w-64': isSidebarOpen, 'w-16': !isSidebarOpen }"
+    >
+      <!-- Toggle Button -->
+      <div
+        class="flex mb-4 p-4 cursor-pointer"
+        :class="{ 'justify-end': isSidebarOpen, 'justify-center': !isSidebarOpen }"
+        @click="toggleSidebar"
+      >
         <Icon v-if="isSidebarOpen" name="tabler:layout-sidebar-left-collapse" size="30" />
         <Icon v-else name="tabler:layout-sidebar-left-expand" size="30" />
       </div>
-      <div class="flex flex-col">
+
+      <!-- Menu Items - Scrollable jika menu terlalu banyak -->
+      <div class="flex flex-col flex-1 overflow-y-auto">
         <AppSidebarItem
           to="/seller/dashboard"
           icon="tabler:layout-dashboard-filled"
@@ -41,21 +52,23 @@ function toggleSidebar() {
           :label-show="isSidebarOpen"
         />
         <div class="divider" />
-        <AppSidebarItem
+        <!-- <AppSidebarItem
           to="/seller/dashboard/profile"
           icon="tabler:user"
           label="Profile"
           :label-show="isSidebarOpen"
-        />
+        /> -->
         <div class="tooltip-right" :data-tip="isSidebarOpen ? undefined : 'Logout'" :class="{ tooltip: !isSidebarOpen }">
-          <button class="btn btn-ghost justify-start" @click="handleLogout">
+          <button class="btn btn-ghost justify-start w-full" @click="handleLogout">
             <Icon name="tabler:logout-2" size="24" />
             <span v-if="isSidebarOpen">Logout</span>
           </button>
         </div>
       </div>
     </div>
-    <div class="flex-1">
+
+    <!-- Main Content - Scrollable -->
+    <div class="flex-1 overflow-y-auto">
       <NuxtPage />
     </div>
   </div>
