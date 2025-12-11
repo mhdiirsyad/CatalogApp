@@ -1,3 +1,5 @@
+const config = useRuntimeConfig();
+
 export type EmailTemplate = {
   to: string;
   subject: string;
@@ -64,7 +66,7 @@ export function getSellerApprovedEmailTemplate(
               <table role="presentation" style="margin: 30px 0; display: flex; align-items: center; justify-content: center;">
                 <tr>
                   <td style="text-align: center;">
-                    <a href="${process.env.NUXT_PUBLIC_SITE_URL || "http://localhost:3000"}/seller/auth/login"
+                    <a href="${config.public.appPublicUrl || "http://localhost:3000"}/seller/auth/login"
                        style="display: inline-block; padding: 14px 32px; background-color: #667eea; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px;">
                       Login ke Dashboard
                     </a>
