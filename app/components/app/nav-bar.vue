@@ -67,7 +67,7 @@ const userInitials = computed(() => {
   <div class="navbar bg-primary text-primary-content">
     <div class="navbar-start">
       <NuxtLink to="/" class="text-xl pl-2 font-bold">
-        Catalog App
+        {{ config.public.siteName }}
       </NuxtLink>
     </div>
     <div class="navbar-end gap-2">

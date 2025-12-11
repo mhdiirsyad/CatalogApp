@@ -179,11 +179,6 @@ function formatDate(timestamp: number) {
           >
             <td>
               <div class="flex items-center gap-3">
-                <!-- <div class="avatar placeholder">
-                  <div class="bg-primary text-primary-content rounded-lg w-10 h-10">
-                    <Icon name="tabler:category" size="20" />
-                  </div>
-                </div> -->
                 <div class="font-bold">
                   {{ category.name }}
                 </div>

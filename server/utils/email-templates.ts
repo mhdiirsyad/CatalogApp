@@ -225,7 +225,7 @@ export function sendReviewEmailTemplate(email: string, reviewer: string): EmailT
           <tr>
             <td style="padding: 40px 40px 20px; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px 8px 0 0;">
               <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: bold;">
-                ✅ Registrasi Disetujui!
+                Terimakasih
               </h1>
             </td>
           </tr>
