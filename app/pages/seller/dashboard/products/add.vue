@@ -95,7 +95,7 @@ const onSubmit = handleSubmit(async (values) => {
       />
       <button type="submit" class="btn btn-primary mt-4" :disabled="submitting">
         <span v-if="submitting">Creating Product...</span>
-        <span v-else>
+        <span v-else class="flex flex-row items-center gap-2">
           <Icon name="tabler:square-rounded-plus-filled" size="24" />
           Add Product
         </span>

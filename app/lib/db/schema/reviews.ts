@@ -11,6 +11,7 @@ export const reviews = sqliteTable("reviews", {
   email: text().notNull(),
   rating: int().notNull(),
   comment: text(),
+  province: text(),
   product_id: int().notNull().references(() => products.id),
   createdAt: int().notNull().$default(() => Date.now()),
   updatedAt: int().notNull().$default(() => Date.now()).$onUpdate(() => Date.now()),
@@ -32,6 +33,7 @@ export const InsertReviewSchema = z.object({
   email: z.string().email(),
   rating: z.number().min(1).max(5),
   comment: z.string().min(1),
+  province: z.string().min(1),
 });
 
 // Schema untuk validasi request API (dengan slug)

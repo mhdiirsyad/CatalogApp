@@ -4,7 +4,7 @@ export default defineEventHandler(async (event) => {
   const { user } = await requireUserSession(event);
   const query = getQuery(event);
 
-  const searchQuery = query.searchQuery as string | undefined;
+  const searchQuery = query.search as string | undefined;
   const categoryId = query.categoryId ? Number(query.categoryId) : undefined;
 
   if (searchQuery || categoryId) {

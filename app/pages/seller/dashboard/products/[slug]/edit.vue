@@ -108,7 +108,7 @@ const onSubmit = handleSubmit(async (values) => {
       <div class="flex justify-end">
         <button type="submit" class="btn btn-primary mt-4" :disabled="loading">
           <span v-if="loading">Updating...</span>
-          <span v-else>
+          <span v-else class="flex flex-row items-center gap-2">
             <Icon name="tabler:edit" size="24" />
             Edit Product
           </span>

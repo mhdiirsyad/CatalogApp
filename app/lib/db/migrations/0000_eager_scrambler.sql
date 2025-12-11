@@ -42,32 +42,6 @@ CREATE TABLE `products` (
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `products_slug_unique` ON `products` (`slug`);--> statement-breakpoint
-CREATE TABLE `districts` (
-	`id` text PRIMARY KEY NOT NULL,
-	`regency_id` text NOT NULL,
-	`name` text NOT NULL,
-	FOREIGN KEY (`regency_id`) REFERENCES `regencies`(`id`) ON UPDATE no action ON DELETE no action
-);
---> statement-breakpoint
-CREATE TABLE `provinces` (
-	`id` text PRIMARY KEY NOT NULL,
-	`name` text NOT NULL
-);
---> statement-breakpoint
-CREATE TABLE `regencies` (
-	`id` text PRIMARY KEY NOT NULL,
-	`province_id` text NOT NULL,
-	`name` text NOT NULL,
-	FOREIGN KEY (`province_id`) REFERENCES `provinces`(`id`) ON UPDATE no action ON DELETE no action
-);
---> statement-breakpoint
-CREATE TABLE `villages` (
-	`id` text PRIMARY KEY NOT NULL,
-	`district_id` text NOT NULL,
-	`name` text NOT NULL,
-	FOREIGN KEY (`district_id`) REFERENCES `districts`(`id`) ON UPDATE no action ON DELETE no action
-);
---> statement-breakpoint
 CREATE TABLE `reviews` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`name` text NOT NULL,
@@ -75,6 +49,7 @@ CREATE TABLE `reviews` (
 	`email` text NOT NULL,
 	`rating` integer NOT NULL,
 	`comment` text,
+	`province` text,
 	`product_id` integer NOT NULL,
 	`created_at` integer NOT NULL,
 	`updated_at` integer NOT NULL,
