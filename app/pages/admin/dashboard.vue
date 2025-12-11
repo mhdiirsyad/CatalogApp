@@ -3,13 +3,21 @@ definePageMeta({
   middleware: ["redirect-not-admin"],
 });
 
+const authStore = useAuthStore();
+const { clear: clearSession } = useUserSession();
+
 async function handleLogout() {
   try {
     const { $csrfFetch } = useNuxtApp();
     await $csrfFetch("/api/auth/logout", {
       method: "post",
     });
-    await navigateTo("/admin/login");
+    // Reset auth store
+    authStore.setUser(null);
+    // Clear user session
+    await clearSession();
+    // Navigate to home page instead of admin login
+    await navigateTo("/", { replace: true });
   }
   catch (e) {
     console.error("Logout failed", e);

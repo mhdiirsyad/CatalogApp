@@ -1,12 +1,5 @@
-<script>
-import useAuthStore from "~/stores/auth";
-
-const authStore = useAuthStore();
-
-onMounted(async () => {
-  if (!authStore.user)
-    await authStore.fetchMe();
-});
+<script setup lang="ts">
+// Layout tidak perlu handle seller data, navbar yang handle sendiri
 </script>
 
 <template>

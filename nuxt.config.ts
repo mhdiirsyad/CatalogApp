@@ -7,7 +7,7 @@ export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
   app: {
     head: {
-      title: "Catalog APP",
+      title: "AmbatuShop",
     },
   },
   devtools: { enabled: true },
@@ -43,6 +43,7 @@ export default defineNuxtConfig({
     public: {
       s3PublicUrl: env.S3_PUBLIC_URL,
       appPublicUrl: env.APP_PUBLIC_URL,
+      siteName: "AmbatuShop",
     },
   },
 });

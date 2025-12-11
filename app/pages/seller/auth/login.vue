@@ -22,12 +22,15 @@ const { handleSubmit, errors, setErrors } = useForm<LoginInput>({
 const submitError = ref("");
 const loading = ref(false);
 const authStore = useAuthStore();
+const { fetch: refreshSession } = useUserSession();
 
 const onSubmit = handleSubmit(async (values) => {
   loading.value = true;
   submitError.value = "";
   try {
     const result = await authStore.login(values);
+    // Refresh session untuk update useUserSession
+    await refreshSession();
     // redirect to target (if provided) or seller dashboard after successful login
     const route = useRoute();
     const redirect = (route.query.redirect as string) || "/seller/dashboard";
