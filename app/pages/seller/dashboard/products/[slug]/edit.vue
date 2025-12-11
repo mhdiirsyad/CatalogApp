@@ -55,6 +55,12 @@ const onSubmit = handleSubmit(async (values) => {
 
 <template>
   <div class="container max-w-md mx-auto">
+    <div
+      class="text-md text-primary font-semibold cursor-pointer mt-4"
+      @click="useRouter().back()"
+    >
+      &larr; Kembali
+    </div>
     <div class="my-4">
       <h1 class="text-xl font-bold">
         Edit Product

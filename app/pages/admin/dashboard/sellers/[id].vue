@@ -98,12 +98,12 @@ function formatDate(timestamp: number) {
 <template>
   <div class="container max-w-[1000px] mx-auto mt-8">
     <div class="flex items-center gap-4 mb-6">
-      <button class="btn btn-ghost btn-sm" @click="$router.back()">
+      <button class="btn btn-primary btn-sm" @click="$router.back()">
         <Icon name="tabler:arrow-left" size="20" />
-        Back
+        Kembali
       </button>
       <h1 class="text-2xl font-bold">
-        Seller Details
+        Detail Penjual
       </h1>
     </div>
 
@@ -114,10 +114,10 @@ function formatDate(timestamp: number) {
           <div class="flex justify-between items-center">
             <div>
               <h2 class="card-title">
-                Registration Status
+                Status Pendaftaran
               </h2>
               <p class="text-sm text-base-content/60">
-                Submitted on {{ formatDate(seller.createdAt) }}
+                Diajukan pada {{ formatDate(seller.createdAt) }}
               </p>
             </div>
             <span class="badge badge-lg" :class="statusBadgeClass">
@@ -133,11 +133,11 @@ function formatDate(timestamp: number) {
             >
               <div v-if="!isProcessing">
                 <Icon name="tabler:check" size="20" />
-                Approve
+                Setujui
               </div>
               <div v-else>
                 <Icon name="tabler:loader" size="20" class="animate-spin" />
-                Processing...
+                Memproses...
               </div>
             </button>
             <button
@@ -157,11 +157,11 @@ function formatDate(timestamp: number) {
           </div>
           <div v-else-if="seller.status === 'APPROVED'" class="text-sm text-success mt-2">
             <Icon name="tabler:circle-check" size="16" class="inline" />
-            Verified on {{ seller.verifiedAt ? formatDate(seller.verifiedAt) : '-' }}
+            Diverifikasi pada {{ seller.verifiedAt ? formatDate(seller.verifiedAt) : '-' }}
           </div>
           <div v-else-if="seller.status === 'CANCELLED'" class="text-sm text-error mt-2">
             <Icon name="tabler:circle-x" size="16" class="inline" />
-            Cancelled on {{ seller.verifiedAt ? formatDate(seller.verifiedAt) : '-' }}
+            Dibatalkan pada {{ seller.verifiedAt ? formatDate(seller.verifiedAt) : '-' }}
           </div>
         </div>
       </div>

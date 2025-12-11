@@ -2,6 +2,7 @@
 import type { FetchError } from "ofetch";
 
 const route = useRoute();
+const { $csrfFetch } = useNuxtApp();
 
 const productStore = useProductStore();
 const {
@@ -56,7 +57,7 @@ async function confirmDelete() {
   try {
     isDeleting.value = true;
     deleteError.value = "";
-    await $fetch(`/api/seller/product/${route.params.slug}`, {
+    await $csrfFetch(`/api/seller/product/${route.params.slug}`, {
       method: "delete",
     });
     navigateTo("/seller/dashboard/products");

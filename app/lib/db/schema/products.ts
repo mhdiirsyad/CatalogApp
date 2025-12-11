@@ -5,6 +5,7 @@ import { createInsertSchema } from "drizzle-zod";
 import type { SelectCategory } from "./category";
 import type { SelectProductImage } from "./product-images";
 import type { SelectReview } from "./reviews";
+import type { SelectSeller } from "./seller";
 
 import { categories } from "./category";
 import { productImages } from "./product-images";
@@ -58,4 +59,5 @@ export type SelectProductFull = SelectProduct & {
   category: SelectCategory;
   reviews: SelectReview[];
   productImages: SelectProductImage[];
+  seller: SelectSeller;
 };

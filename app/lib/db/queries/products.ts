@@ -56,6 +56,7 @@ export async function findProductBySlug(slug: string) {
       productImages: { orderBy(field, operators) {
         return operators.asc(field.createdAt);
       } },
+      seller: true,
     },
   });
 }
