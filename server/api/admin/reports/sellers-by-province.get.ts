@@ -1,5 +1,5 @@
 import chromium from "@sparticuz/chromium";
-import { desc, gte } from "drizzle-orm";
+import { gte } from "drizzle-orm";
 import puppeteer from "puppeteer-core";
 
 import db from "~/lib/db";
@@ -45,17 +45,7 @@ export default defineEventHandler(async (event) => {
     })
     .from(sellers)
     .where(whereClause)
-    .orderBy(sellers.picProvince, desc(sellers.createdAt));
-
-  // Group by province
-  const provinceGroups = allSellers.reduce((acc, seller) => {
-    const province = seller.picProvince;
-    if (!acc[province]) {
-      acc[province] = [];
-    }
-    acc[province].push(seller);
-    return acc;
-  }, {} as Record<string, typeof allSellers>);
+    .orderBy(sellers.picProvince, sellers.storeName);
 
   // Generate HTML content for PDF
   const html = `
@@ -175,32 +165,26 @@ export default defineEventHandler(async (event) => {
         <p>${config.public.siteName} - Dicetak pada ${new Date().toLocaleDateString("id-ID", { dateStyle: "full" })} oleh ${(session.user as any).username}</p>
       </div>
 
-
-      ${Object.entries(provinceGroups).map(([province, sellers]) => `
-        <div class="section">
-          <h2>${province} (${sellers.length} seller)</h2>
-          <table>
-            <thead>
-              <tr>
-                <th style="width: 5%;">No</th>
-                <th style="width: 35%;">Nama Toko</th>
-                <th style="width: 30%;">Nama PIC</th>
-                <th style="width: 30%;">Provinsi</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${sellers.map((seller, index) => `
-                <tr>
-                  <td>${index + 1}</td>
-                  <td>${seller.storeName}</td>
-                  <td>${seller.picName}</td>
-                  <td>${seller.picProvince}</td>
-                </tr>
-              `).join("")}
-            </tbody>
-          </table>
-        </div>
-      `).join("")}
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 5%;">No</th>
+            <th style="width: 35%;">Nama Toko</th>
+            <th style="width: 30%;">Nama PIC</th>
+            <th style="width: 30%;">Provinsi</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${allSellers.map((seller, index) => `
+            <tr>
+              <td>${index + 1}</td>
+              <td>${seller.storeName}</td>
+              <td>${seller.picName}</td>
+              <td>${seller.picProvince}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
 
       <div class="footer">
         <p>Laporan ini digenerate otomatis oleh sistem ${config.public.siteName}</p>

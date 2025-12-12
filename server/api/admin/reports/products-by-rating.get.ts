@@ -27,33 +27,34 @@ export default defineEventHandler(async (event) => {
     dateFilter = now - (30 * 24 * 60 * 60 * 1000);
   }
 
-  const whereClause = dateFilter ? gte(products.createdAt, dateFilter) : undefined;
+  const whereClause = dateFilter ? gte(reviews.createdAt, dateFilter) : undefined;
 
-  // Get all products with rating, seller info, and category
+  // Get all reviews with product info, seller info, and category
   const allProducts = await db
     .select({
-      id: products.id,
+      reviewId: reviews.id,
+      productId: products.id,
       name: products.name,
-      rating: products.rating,
+      rating: reviews.rating,
       price: products.price,
       stock: products.stock,
       categoryName: categories.name,
       storeName: sellers.storeName,
       reviewProvince: reviews.province,
-      createdAt: products.createdAt,
+      createdAt: reviews.createdAt,
     })
-    .from(products)
+    .from(reviews)
+    .innerJoin(products, eq(reviews.product_id, products.id))
     .leftJoin(categories, eq(products.category_id, categories.id))
     .leftJoin(sellers, eq(products.seller_id, sellers.id))
-    .leftJoin(reviews, eq(products.id, reviews.product_id))
     .where(whereClause)
-    .orderBy(desc(products.rating), desc(products.createdAt));
+    .orderBy(desc(reviews.rating), desc(reviews.createdAt));
 
   // Calculate statistics
-  // const totalProducts = allProducts.length;
-  // const avgRating = allProducts.reduce((sum, p) => sum + p.rating, 0) / totalProducts;
-  // const highRatedProducts = allProducts.filter(p => p.rating >= 4).length;
-  // const lowRatedProducts = allProducts.filter(p => p.rating < 3).length;
+  const totalReviews = allProducts.length;
+  const _avgRating = totalReviews > 0 ? allProducts.reduce((sum, p) => sum + p.rating, 0) / totalReviews : 0;
+  const _highRatedProducts = allProducts.filter(p => p.rating >= 4).length;
+  const _lowRatedProducts = allProducts.filter(p => p.rating < 3).length;
 
   // Generate HTML content for PDF
   const html = `
@@ -198,7 +199,7 @@ export default defineEventHandler(async (event) => {
       </table>
 
       <div class="footer">
-        <p>Laporan ini digenerate otomatis oleh sistem ${config.public.siteName} • Produk diurutkan dari rating tertinggi ke terendah</p>
+        <p>Laporan ini digenerate otomatis oleh sistem ${config.public.siteName} • Total ${totalReviews} review dari pembeli</p>
       </div>
     </body>
     </html>
