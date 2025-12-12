@@ -5,8 +5,10 @@ import puppeteer from "puppeteer-core";
 import db from "~/lib/db";
 import { sellers } from "~/lib/db/schema";
 
+const config = useRuntimeConfig();
+
 export default defineEventHandler(async (event) => {
-  await requireUserSession(event);
+  const session = await requireUserSession(event);
 
   // Get period from query params (default: all)
   const query = getQuery(event);
@@ -45,9 +47,15 @@ export default defineEventHandler(async (event) => {
     .where(whereClause)
     .orderBy(desc(sellers.createdAt));
 
-  // Separate active and inactive sellers
-  const activeSellers = allSellers.filter(s => s.status === "APPROVED");
-  const inactiveSellers = allSellers.filter(s => s.status !== "APPROVED");
+  // Sort sellers: active first, then inactive
+  const sortedSellers = [
+    ...allSellers.filter(s => s.status === "APPROVED"),
+    ...allSellers.filter(s => s.status !== "APPROVED"),
+  ];
+
+  // // Calculate stats
+  // const activeSellers = allSellers.filter(s => s.status === "APPROVED");
+  // const inactiveSellers = allSellers.filter(s => s.status !== "APPROVED");
 
   // Generate HTML content for PDF
   const html = `
@@ -141,6 +149,21 @@ export default defineEventHandler(async (event) => {
           font-size: 14px;
           color: #666;
         }
+        .status-badge {
+          display: inline-block;
+          padding: 4px 12px;
+          border-radius: 4px;
+          font-weight: 600;
+          font-size: 10px;
+        }
+        .status-badge.active {
+          background-color: #d1fae5;
+          color: #10b981;
+        }
+        .status-badge.inactive {
+          background-color: #fee2e2;
+          color: #ef4444;
+        }
         .footer {
           margin-top: 40px;
           text-align: center;
@@ -153,90 +176,38 @@ export default defineEventHandler(async (event) => {
     </head>
     <body>
       <div class="header">
-        <h1>Laporan Status Akun Seller</h1>
+        <h1>Laporan Daftar Akun Penjual Berdasarkan Status</h1>
         <p>Periode: ${period === "1d" ? "1 Hari Terakhir" : period === "7d" ? "7 Hari Terakhir" : period === "30d" ? "30 Hari Terakhir" : "Semua Waktu"}</p>
-        <p>CatalogApp - Dicetak pada ${new Date().toLocaleDateString("id-ID", { dateStyle: "full" })}</p>
+        <p>${config.public.siteName} - Dicetak pada ${new Date().toLocaleDateString("id-ID", { dateStyle: "full" })} oleh ${(session.user as any).username}</p>
       </div>
 
-      <div class="stats">
-        <div class="stat-card active">
-          <h3>${activeSellers.length}</h3>
-          <p>Seller Aktif</p>
-        </div>
-        <div class="stat-card inactive">
-          <h3>${inactiveSellers.length}</h3>
-          <p>Seller Nonaktif</p>
-        </div>
-      </div>
-
-      <div class="section">
-        <h2>Daftar Seller Aktif (${activeSellers.length})</h2>
-        <table>
-          <thead>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 5%;">No</th>
+            <th style="width: 30%;">Nama PIC</th>
+            <th style="width: 35%;">Nama Toko</th>
+            <th style="width: 30%;">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${sortedSellers.map((seller, index) => `
             <tr>
-              <th>ID</th>
-              <th>Nama Toko</th>
-              <th>Nama PIC</th>
-              <th>Email</th>
-              <th>No. HP</th>
-              <th>Provinsi</th>
-              <th>Kota</th>
-              <th>Tanggal Verifikasi</th>
+              <td>${index + 1}</td>
+              <td>${seller.picName}</td>
+              <td>${seller.storeName}</td>
+              <td>
+                <span class="status-badge ${seller.status === "APPROVED" ? "active" : "inactive"}">
+                  ${seller.status === "APPROVED" ? "Aktif" : "Tidak Aktif"}
+                </span>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            ${activeSellers.map(seller => `
-              <tr>
-                <td>${seller.id}</td>
-                <td>${seller.storeName}</td>
-                <td>${seller.picName}</td>
-                <td>${seller.picEmail}</td>
-                <td>${seller.picHp}</td>
-                <td>${seller.picProvince}</td>
-                <td>${seller.picCity}</td>
-                <td>${seller.verifiedAt ? new Date(seller.verifiedAt).toLocaleDateString("id-ID") : "-"}</td>
-              </tr>
-            `).join("")}
-          </tbody>
-        </table>
-      </div>
-
-      <div class="section">
-        <h2>Daftar Seller Nonaktif (${inactiveSellers.length})</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Nama Toko</th>
-              <th>Nama PIC</th>
-              <th>Email</th>
-              <th>No. HP</th>
-              <th>Provinsi</th>
-              <th>Kota</th>
-              <th>Status</th>
-              <th>Tanggal Daftar</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${inactiveSellers.map(seller => `
-              <tr>
-                <td>${seller.id}</td>
-                <td>${seller.storeName}</td>
-                <td>${seller.picName}</td>
-                <td>${seller.picEmail}</td>
-                <td>${seller.picHp}</td>
-                <td>${seller.picProvince}</td>
-                <td>${seller.picCity}</td>
-                <td>${seller.status === "PENDING" ? "Pending" : "Dibatalkan"}</td>
-                <td>${new Date(seller.createdAt).toLocaleDateString("id-ID")}</td>
-              </tr>
-            `).join("")}
-          </tbody>
-        </table>
-      </div>
+          `).join("")}
+        </tbody>
+      </table>
 
       <div class="footer">
-        <p>Laporan ini digenerate otomatis oleh sistem CatalogApp</p>
+        <p>Laporan ini digenerate otomatis oleh sistem ${config.public.siteName}</p>
       </div>
     </body>
     </html>

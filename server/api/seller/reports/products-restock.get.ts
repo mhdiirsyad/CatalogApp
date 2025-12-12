@@ -3,7 +3,9 @@ import { and, eq, lt } from "drizzle-orm";
 import puppeteer from "puppeteer-core";
 
 import db from "~/lib/db";
-import { products } from "~/lib/db/schema";
+import { categories, products } from "~/lib/db/schema";
+
+const config = useRuntimeConfig();
 
 export default defineEventHandler(async (event) => {
   const seller = await sellerAuth.seller(event);
@@ -20,15 +22,17 @@ export default defineEventHandler(async (event) => {
       stock: products.stock,
       price: products.price,
       rating: products.rating,
+      categoryName: categories.name,
     })
     .from(products)
+    .leftJoin(categories, eq(products.category_id, categories.id))
     .where(
       and(
         eq(products.seller_id, seller.id),
         lt(products.stock, 2),
       ),
     )
-    .orderBy(products.stock); // Order by stock ascending (lowest first)
+    .orderBy(categories.name, products.name); // Order by category then product name
 
   // Helper function to format rupiah
   const formatRupiah = (num: number) => {
@@ -41,8 +45,8 @@ export default defineEventHandler(async (event) => {
 
   // Calculate statistics
   const totalRestockNeeded = restockProducts.length;
-  const outOfStock = restockProducts.filter(p => p.stock === 0).length;
-  const lowStock = restockProducts.filter(p => p.stock === 1).length;
+  // const outOfStock = restockProducts.filter(p => p.stock === 0).length;
+  // const lowStock = restockProducts.filter(p => p.stock === 1).length;
 
   // Generate HTML content for PDF
   const html = `
@@ -182,7 +186,7 @@ export default defineEventHandler(async (event) => {
       <div class="header">
         <h1>⚠️ Laporan Produk Perlu Restock</h1>
         <p>Daftar produk dengan stok &lt; 2 unit</p>
-        <p>Dicetak pada ${new Date().toLocaleDateString("id-ID", { dateStyle: "full" })}</p>
+        <p>${config.public.siteName} - Dicetak pada ${new Date().toLocaleDateString("id-ID", { dateStyle: "full" })} oleh ${seller.picName}</p>
       </div>
 
       ${totalRestockNeeded > 0
@@ -192,31 +196,14 @@ export default defineEventHandler(async (event) => {
             <p>Terdapat ${totalRestockNeeded} produk yang memerlukan restock segera untuk menghindari kehabisan stok.</p>
           </div>
 
-          <div class="stats">
-            <div class="stat-card total">
-              <h3>${totalRestockNeeded}</h3>
-              <p>Total Perlu Restock</p>
-            </div>
-            <div class="stat-card out">
-              <h3>${outOfStock}</h3>
-              <p>Stok Habis (0)</p>
-            </div>
-            <div class="stat-card low">
-              <h3>${lowStock}</h3>
-              <p>Stok Kritis (1)</p>
-            </div>
-          </div>
-
           <table>
             <thead>
               <tr>
                 <th style="width: 5%;">No</th>
-                <th style="width: 10%;">Prioritas</th>
-                <th style="width: 30%;">Nama Produk</th>
-                <th style="width: 8%;">Stok</th>
-                <th style="width: 15%;">Harga Satuan</th>
-                <th style="width: 8%;">Rating</th>
-                <th style="width: 24%;">Deskripsi</th>
+                <th style="width: 35%;">Produk</th>
+                <th style="width: 25%;">Kategori</th>
+                <th style="width: 20%;">Harga</th>
+                <th style="width: 15%;">Stock</th>
               </tr>
             </thead>
             <tbody>
@@ -227,18 +214,14 @@ export default defineEventHandler(async (event) => {
                 return `
                   <tr>
                     <td>${index + 1}</td>
+                    <td><strong>${product.name}</strong></td>
+                    <td>${product.categoryName || "-"}</td>
+                    <td>${formatRupiah(product.price)}</td>
                     <td>
                       <span class="priority ${priority.class}">
-                        ${priority.label}
+                        ${product.stock}
                       </span>
                     </td>
-                    <td><strong>${product.name}</strong></td>
-                    <td style="color: ${product.stock === 0 ? "#dc2626" : "#f59e0b"}; font-weight: bold;">
-                      ${product.stock}
-                    </td>
-                    <td>${formatRupiah(product.price)}</td>
-                    <td>⭐ ${product.rating.toFixed(1)}</td>
-                    <td style="font-size: 9px;">${product.description}</td>
                   </tr>
                 `;
               }).join("")}
@@ -254,7 +237,7 @@ export default defineEventHandler(async (event) => {
         `}
 
       <div class="footer">
-        <p>Laporan ini digenerate otomatis oleh sistem CatalogApp</p>
+        <p>Laporan ini digenerate otomatis oleh sistem ${config.public.siteName}</p>
         <p style="margin-top: 5px;">Rekomendasi: Segera lakukan pemesanan untuk produk dengan prioritas URGENT</p>
       </div>
     </body>
