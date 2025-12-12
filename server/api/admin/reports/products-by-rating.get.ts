@@ -3,10 +3,12 @@ import { desc, eq, gte } from "drizzle-orm";
 import puppeteer from "puppeteer-core";
 
 import db from "~/lib/db";
-import { categories, products, sellers } from "~/lib/db/schema";
+import { categories, products, reviews, sellers } from "~/lib/db/schema";
+
+const config = useRuntimeConfig();
 
 export default defineEventHandler(async (event) => {
-  await requireUserSession(event);
+  const session = await requireUserSession(event);
 
   // Get period from query params (default: all)
   const query = getQuery(event);
@@ -37,21 +39,21 @@ export default defineEventHandler(async (event) => {
       stock: products.stock,
       categoryName: categories.name,
       storeName: sellers.storeName,
-      sellerProvince: sellers.picProvince,
-      sellerCity: sellers.picCity,
+      reviewProvince: reviews.province,
       createdAt: products.createdAt,
     })
     .from(products)
     .leftJoin(categories, eq(products.category_id, categories.id))
     .leftJoin(sellers, eq(products.seller_id, sellers.id))
+    .leftJoin(reviews, eq(products.id, reviews.product_id))
     .where(whereClause)
     .orderBy(desc(products.rating), desc(products.createdAt));
 
   // Calculate statistics
-  const totalProducts = allProducts.length;
-  const avgRating = allProducts.reduce((sum, p) => sum + p.rating, 0) / totalProducts;
-  const highRatedProducts = allProducts.filter(p => p.rating >= 4).length;
-  const lowRatedProducts = allProducts.filter(p => p.rating < 3).length;
+  // const totalProducts = allProducts.length;
+  // const avgRating = allProducts.reduce((sum, p) => sum + p.rating, 0) / totalProducts;
+  // const highRatedProducts = allProducts.filter(p => p.rating >= 4).length;
+  // const lowRatedProducts = allProducts.filter(p => p.rating < 3).length;
 
   // Generate HTML content for PDF
   const html = `
@@ -155,42 +157,21 @@ export default defineEventHandler(async (event) => {
     </head>
     <body>
       <div class="header">
-        <h1>Laporan Produk Berdasarkan Rating</h1>
+        <h1>Laporan Daftar Produk Berdasarkan Rating</h1>
         <p>Periode: ${period === "1d" ? "1 Hari Terakhir" : period === "7d" ? "7 Hari Terakhir" : period === "30d" ? "30 Hari Terakhir" : "Semua Waktu"}</p>
-        <p>CatalogApp - Dicetak pada ${new Date().toLocaleDateString("id-ID", { dateStyle: "full" })}</p>
-      </div>
-
-      <div class="stats-grid">
-        <div class="stat-card">
-          <h3>${totalProducts}</h3>
-          <p>Total Produk</p>
-        </div>
-        <div class="stat-card">
-          <h3>${avgRating.toFixed(1)}</h3>
-          <p>Rating Rata-rata</p>
-        </div>
-        <div class="stat-card">
-          <h3>${highRatedProducts}</h3>
-          <p>Rating ≥ 4.0</p>
-        </div>
-        <div class="stat-card">
-          <h3>${lowRatedProducts}</h3>
-          <p>Rating < 3.0</p>
-        </div>
+        <p>${config.public.siteName} - Dicetak pada ${new Date().toLocaleDateString("id-ID", { dateStyle: "full" })} oleh ${(session.user as any).username}</p>
       </div>
 
       <table>
         <thead>
           <tr>
-            <th>No</th>
-            <th>Rating</th>
-            <th>Nama Produk</th>
-            <th>Kategori</th>
-            <th>Harga</th>
-            <th>Stok</th>
-            <th>Nama Toko</th>
-            <th>Provinsi Penjual</th>
-            <th>Kota Penjual</th>
+            <th style="width: 5%;">No</th>
+            <th style="width: 25%;">Produk</th>
+            <th style="width: 15%;">Kategori</th>
+            <th style="width: 15%;">Harga</th>
+            <th style="width: 10%;">Rating</th>
+            <th style="width: 15%;">Nama Toko</th>
+            <th style="width: 15%;">Provinsi</th>
           </tr>
         </thead>
         <tbody>
@@ -204,14 +185,12 @@ export default defineEventHandler(async (event) => {
             return `
               <tr>
                 <td>${index + 1}</td>
-                <td><span class="rating ${ratingClass}">${product.rating.toFixed(1)} ⭐</span></td>
                 <td>${product.name}</td>
                 <td>${product.categoryName || "-"}</td>
                 <td>${formattedPrice}</td>
-                <td>${product.stock}</td>
+                <td><span class="rating ${ratingClass}">${product.rating.toFixed(1)} ⭐</span></td>
                 <td>${product.storeName || "-"}</td>
-                <td>${product.sellerProvince || "-"}</td>
-                <td>${product.sellerCity || "-"}</td>
+                <td>${product.reviewProvince || "-"}</td>
               </tr>
             `;
           }).join("")}
@@ -219,7 +198,7 @@ export default defineEventHandler(async (event) => {
       </table>
 
       <div class="footer">
-        <p>Laporan ini digenerate otomatis oleh sistem CatalogApp • Produk diurutkan dari rating tertinggi ke terendah</p>
+        <p>Laporan ini digenerate otomatis oleh sistem ${config.public.siteName} • Produk diurutkan dari rating tertinggi ke terendah</p>
       </div>
     </body>
     </html>

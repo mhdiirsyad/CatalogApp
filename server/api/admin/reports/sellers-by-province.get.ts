@@ -5,8 +5,10 @@ import puppeteer from "puppeteer-core";
 import db from "~/lib/db";
 import { sellers } from "~/lib/db/schema";
 
+const config = useRuntimeConfig();
+
 export default defineEventHandler(async (event) => {
-  await requireUserSession(event);
+  const session = await requireUserSession(event);
 
   // Get period from query params (default: all)
   const query = getQuery(event);
@@ -168,29 +170,11 @@ export default defineEventHandler(async (event) => {
     </head>
     <body>
       <div class="header">
-        <h1>Laporan Penjual per Provinsi</h1>
+        <h1>Laporan Daftar Toko Berdasarkan Lokasi Provinsi</h1>
         <p>Periode: ${period === "1d" ? "1 Hari Terakhir" : period === "7d" ? "7 Hari Terakhir" : period === "30d" ? "30 Hari Terakhir" : "Semua Waktu"}</p>
-        <p>CatalogApp - Dicetak pada ${new Date().toLocaleDateString("id-ID", { dateStyle: "full" })}</p>
+        <p>${config.public.siteName} - Dicetak pada ${new Date().toLocaleDateString("id-ID", { dateStyle: "full" })} oleh ${(session.user as any).username}</p>
       </div>
 
-      <div class="stats-grid">
-        <div class="stat-card">
-          <h3>${Object.keys(provinceGroups).length}</h3>
-          <p>Total Provinsi</p>
-        </div>
-        <div class="stat-card">
-          <h3>${allSellers.length}</h3>
-          <p>Total Seller</p>
-        </div>
-        <div class="stat-card">
-          <h3>${allSellers.filter(s => s.status === "APPROVED").length}</h3>
-          <p>Seller Aktif</p>
-        </div>
-        <div class="stat-card">
-          <h3>${allSellers.filter(s => s.status !== "APPROVED").length}</h3>
-          <p>Seller Nonaktif</p>
-        </div>
-      </div>
 
       ${Object.entries(provinceGroups).map(([province, sellers]) => `
         <div class="section">
@@ -198,42 +182,28 @@ export default defineEventHandler(async (event) => {
           <table>
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Nama Toko</th>
-                <th>Nama PIC</th>
-                <th>Email</th>
-                <th>No. HP</th>
-                <th>Kota</th>
-                <th>Kecamatan</th>
-                <th>Status</th>
-                <th>Tanggal Daftar</th>
+                <th style="width: 5%;">No</th>
+                <th style="width: 35%;">Nama Toko</th>
+                <th style="width: 30%;">Nama PIC</th>
+                <th style="width: 30%;">Provinsi</th>
               </tr>
             </thead>
             <tbody>
-              ${sellers.map((seller) => {
-                const statusClass = seller.status === "APPROVED" ? "status-active" : (seller.status === "PENDING" ? "status-pending" : "status-cancelled");
-                const statusText = seller.status === "APPROVED" ? "Aktif" : (seller.status === "PENDING" ? "Pending" : "Dibatalkan");
-                return `
-                  <tr>
-                    <td>${seller.id}</td>
-                    <td>${seller.storeName}</td>
-                    <td>${seller.picName}</td>
-                    <td>${seller.picEmail}</td>
-                    <td>${seller.picHp}</td>
-                    <td>${seller.picCity}</td>
-                    <td>${seller.picDistrict}</td>
-                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
-                    <td>${new Date(seller.createdAt).toLocaleDateString("id-ID")}</td>
-                  </tr>
-                `;
-              }).join("")}
+              ${sellers.map((seller, index) => `
+                <tr>
+                  <td>${index + 1}</td>
+                  <td>${seller.storeName}</td>
+                  <td>${seller.picName}</td>
+                  <td>${seller.picProvince}</td>
+                </tr>
+              `).join("")}
             </tbody>
           </table>
         </div>
       `).join("")}
 
       <div class="footer">
-        <p>Laporan ini digenerate otomatis oleh sistem CatalogApp</p>
+        <p>Laporan ini digenerate otomatis oleh sistem ${config.public.siteName}</p>
       </div>
     </body>
     </html>

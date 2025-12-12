@@ -111,8 +111,8 @@ onMounted(() => {
               <input
                 v-model="searchInput"
                 type="search"
-                placeholder="Cari berdasarkan nama produk atau toko..."
-                class="grow"
+                placeholder="Cari dengan nama produk atau toko..."
+                class="text-sm"
               >
             </label>
           </div>

@@ -3,7 +3,9 @@ import { desc, eq } from "drizzle-orm";
 import puppeteer from "puppeteer-core";
 
 import db from "~/lib/db";
-import { products } from "~/lib/db/schema";
+import { categories, products } from "~/lib/db/schema";
+
+const config = useRuntimeConfig();
 
 export default defineEventHandler(async (event) => {
   const seller = await sellerAuth.seller(event);
@@ -20,8 +22,10 @@ export default defineEventHandler(async (event) => {
       stock: products.stock,
       price: products.price,
       rating: products.rating,
+      categoryName: categories.name,
     })
     .from(products)
+    .leftJoin(categories, eq(products.category_id, categories.id))
     .where(eq(products.seller_id, seller.id))
     .orderBy(desc(products.stock));
 
@@ -48,11 +52,11 @@ export default defineEventHandler(async (event) => {
   };
 
   // Calculate statistics
-  const totalProducts = sellerProducts.length;
-  const totalStock = sellerProducts.reduce((sum, p) => sum + p.stock, 0);
-  const avgRating = totalProducts > 0
-    ? (sellerProducts.reduce((sum, p) => sum + p.rating, 0) / totalProducts).toFixed(1)
-    : "0.0";
+  // const totalProducts = sellerProducts.length;
+  // const totalStock = sellerProducts.reduce((sum, p) => sum + p.stock, 0);
+  // const avgRating = totalProducts > 0
+  //   ? (sellerProducts.reduce((sum, p) => sum + p.rating, 0) / totalProducts).toFixed(1)
+  //   : "0.0";
 
   // Generate HTML content for PDF
   const html = `
@@ -147,34 +151,18 @@ export default defineEventHandler(async (event) => {
       <div class="header">
         <h1>Laporan Produk Berdasarkan Stok</h1>
         <p>Diurutkan dari stok tertinggi ke terendah</p>
-        <p>Dicetak pada ${new Date().toLocaleDateString("id-ID", { dateStyle: "full" })}</p>
-      </div>
-
-      <div class="stats">
-        <div class="stat-card">
-          <h3>${totalProducts}</h3>
-          <p>Total Produk</p>
-        </div>
-        <div class="stat-card">
-          <h3>${totalStock}</h3>
-          <p>Total Stok</p>
-        </div>
-        <div class="stat-card">
-          <h3>${avgRating}</h3>
-          <p>Rata-rata Rating</p>
-        </div>
+        <p>${config.public.siteName} - Dicetak pada ${new Date().toLocaleDateString("id-ID", { dateStyle: "full" })} oleh ${seller.picName}</p>
       </div>
 
       <table>
         <thead>
           <tr>
             <th style="width: 5%;">No</th>
-            <th style="width: 30%;">Nama Produk</th>
-            <th style="width: 10%;">Stok</th>
-            <th style="width: 15%;">Status Stok</th>
-            <th style="width: 15%;">Harga</th>
+            <th style="width: 30%;">Produk</th>
+            <th style="width: 20%;">Kategori</th>
+            <th style="width: 20%;">Harga</th>
             <th style="width: 10%;">Rating</th>
-            <th style="width: 15%;">Deskripsi</th>
+            <th style="width: 15%;">Stok</th>
           </tr>
         </thead>
         <tbody>
@@ -184,15 +172,14 @@ export default defineEventHandler(async (event) => {
               <tr>
                 <td>${index + 1}</td>
                 <td><strong>${product.name}</strong></td>
-                <td>${product.stock}</td>
-                <td>
-                  <span class="stock-badge" style="background-color: ${stockStatus.color};">
-                    ${stockStatus.label}
-                  </span>
-                </td>
+                <td>${product.categoryName || "-"}</td>
                 <td>${formatRupiah(product.price)}</td>
                 <td>⭐ ${product.rating.toFixed(1)}</td>
-                <td style="font-size: 9px;">${product.description}</td>
+                <td>
+                  <span class="stock-badge" style="background-color: ${stockStatus.color};">
+                    ${product.stock}
+                  </span>
+                </td>
               </tr>
             `;
           }).join("")}
@@ -200,7 +187,7 @@ export default defineEventHandler(async (event) => {
       </table>
 
       <div class="footer">
-        <p>Laporan ini digenerate otomatis oleh sistem CatalogApp</p>
+        <p>Laporan ini digenerate otomatis oleh sistem ${config.public.siteName}</p>
       </div>
     </body>
     </html>
