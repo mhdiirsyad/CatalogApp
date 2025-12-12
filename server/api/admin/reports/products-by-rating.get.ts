@@ -47,14 +47,15 @@ export default defineEventHandler(async (event) => {
     .innerJoin(products, eq(reviews.product_id, products.id))
     .leftJoin(categories, eq(products.category_id, categories.id))
     .leftJoin(sellers, eq(products.seller_id, sellers.id))
+    .leftJoin(reviews, eq(products.id, reviews.product_id))
     .where(whereClause)
     .orderBy(desc(reviews.rating), desc(reviews.createdAt));
 
   // Calculate statistics
-  const totalReviews = allProducts.length;
-  const _avgRating = totalReviews > 0 ? allProducts.reduce((sum, p) => sum + p.rating, 0) / totalReviews : 0;
-  const _highRatedProducts = allProducts.filter(p => p.rating >= 4).length;
-  const _lowRatedProducts = allProducts.filter(p => p.rating < 3).length;
+  // const totalProducts = allProducts.length;
+  // const avgRating = allProducts.reduce((sum, p) => sum + p.rating, 0) / totalProducts;
+  // const highRatedProducts = allProducts.filter(p => p.rating >= 4).length;
+  // const lowRatedProducts = allProducts.filter(p => p.rating < 3).length;
 
   // Generate HTML content for PDF
   const html = `
@@ -199,7 +200,7 @@ export default defineEventHandler(async (event) => {
       </table>
 
       <div class="footer">
-        <p>Laporan ini digenerate otomatis oleh sistem ${config.public.siteName} • Total ${totalReviews} review dari pembeli</p>
+        <p>Laporan ini digenerate otomatis oleh sistem ${config.public.siteName} • Produk diurutkan dari rating tertinggi ke terendah</p>
       </div>
     </body>
     </html>
